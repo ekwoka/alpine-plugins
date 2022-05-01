@@ -1,0 +1,17 @@
+{
+  "name": "@ekwoka/x-rias",
+  "version": "0.2.3",
+  "description": "A simple Alpine Directive for use with Cloudinary Fetch API for handling Responsive Images",
+  "main": "src/index.js",
+  "author": "Eric Kwoka",
+  "license": "MIT",
+  "keywords": [
+    "AlpineJS",
+    "RIAS",
+    "respimg",
+    "cloudinary"
+  ],
+  "peerDependencies": {
+    "alpinejs": "3.x"
+  }
+}
