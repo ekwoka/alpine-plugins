@@ -1,6 +1,6 @@
 {
   "name": "@ekwoka/x-ajax",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "A simple Ajax Loader for AlpineJS",
   "main": "src/index.js",
   "keywords": [
@@ -11,5 +11,9 @@
   "license": "MIT",
   "peerDependencies": {
     "alpinejs": "3.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekwoka/alpine-plugins"
   }
 }

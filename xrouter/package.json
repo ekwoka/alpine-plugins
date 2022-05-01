@@ -1,6 +1,6 @@
 {
   "name": "@ekwoka/x-router",
-  "version": "0.1.5",
+  "version": "0.2.0",
   "description": "A Router plugin for AlpineJS",
   "main": "src/index.js",
   "scripts": {
@@ -14,5 +14,9 @@
   "license": "MIT",
   "peerDependencies": {
     "alpinejs": "3.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekwoka/alpine-plugins"
   }
 }
