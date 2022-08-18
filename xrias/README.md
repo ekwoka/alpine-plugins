@@ -1,4 +1,5 @@
-<h1 align="center">X-RIAS: Responsive Images as a Service 👋</h1>
+# X-RIAS: Responsive Images as a Service
+
 [<img src="https://img.shields.io/npm/v/@ekwoka/x-rias?style=for-the-badge">](https://www.npmjs.com/package/@ekwoka/x-rias)
 <img src="https://img.shields.io/npm/types/@ekwoka/x-rias?label=%20&amp;logo=typescript&amp;logoColor=white&amp;style=for-the-badge">
 <img src="https://img.shields.io/npm/dt/@ekwoka/x-rias?style=for-the-badge" >
