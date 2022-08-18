@@ -1,0 +1,12 @@
+{
+  // Change this to match your project
+  "include": ["src/**/*"],
+  "compilerOptions": {
+    "declaration": true,
+    "outDir": "dist",
+    "declarationMap": true,
+    "target": "ESNext",
+    "module": "es2020",
+    "moduleResolution": "node"
+  }
+}
