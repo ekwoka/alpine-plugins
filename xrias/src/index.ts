@@ -6,7 +6,7 @@ export default function (OPTIONS: Config) {
   const {
     autoSize = true,
     shopify = false,
-    maxSize = Infinity,
+    maxSize = 0,
     cloudURL = '',
   } = parseOptions(OPTIONS);
 
