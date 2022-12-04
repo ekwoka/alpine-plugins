@@ -64,15 +64,21 @@ When using a single query selector, use the modifier `replace` to destroy the `x
 <main>inside the fetched resource and replace this element with that element</main>
 ```
 
-## Error Handling and Events
+## Halting Fetch
 
-`x-ajax` mimics the native object replacement API and emits two events on the element: `load` and `error`. Naturally, `error` fires if there was any error in the process, most likely to be a network error, but will also fire if `x-ajax` cannot find the elements in the returned document. `load` fires after the network call and parsing, but before actually swapping the dom elements, which generally is incapable of producing an error.
-
-As such, these events can be accessed with alpine by
+If you want to prevent the fetch from happening until a future time (while not wrapping the element in an `x-if`), you can have the expression resolve to any falsy value (`false`, `null`, `undefined`, `0`, `""`, `NaN`). This will not trigger the fetch and replace.
 
 ```html
-<div x-ajax.replace="myCoolURL" @load="success = true" @error="error = $event.detail"></div>
+<div x-ajax="ready ? myAwesomeURL : false">Waiting</div>
 ```
+
+This will trigger an event on the element accessible at `@halted` for debugging purposes.
+
+````html
+## Error Handling and Events `x-ajax` mimics the native object replacement API and emits two events on the element: `load` and `error`. Naturally, `error` fires if there was any error in the process, most likely to be a network error, but will also fire if `x-ajax` cannot find the elements in the
+returned document. `load` fires after the network call and parsing, but before actually swapping the dom elements, which generally is incapable of producing an error. As such, these events can be accessed with alpine by ```html
+<div x-ajax.replace="myCoolURL" @load="success = true" @error="error = $event.detail"></div>
+````
 
 These can be used to change the url to a fallback, or to display an error message.
 

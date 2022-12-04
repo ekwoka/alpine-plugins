@@ -10,6 +10,7 @@ export default function (Alpine) {
 
     effect(() => {
       target(async (target) => {
+        if (!target) return el.dispatchEvent(new CustomEvent('halted', { detail: 'Target is not defined', ...eventDefaults }));
         try {
           const response = await fetch(target, { mode: 'no-cors' });
           if (!response.ok) throw new Error(response.statusText);
@@ -24,6 +25,7 @@ export default function (Alpine) {
           if (selector.tagName == 'BODY') return el.replaceChildren(...selector.children);
           return el.replaceChildren(selector);
         } catch (e) {
+          console.error(e);
           el.dispatchEvent(new Event('error', { detail: e, ...eventDefaults }));
         }
       });

@@ -1,2 +1,2 @@
-<span>hello world</span>
+<span @halted="console.log('falsy target:', $event)" x-ajax="''">hello world</span>
 <span x-ajax.replace="'other2.html'" @error="console.log('error:', $event)">Hi Mom</span>
