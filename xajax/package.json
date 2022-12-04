@@ -3,6 +3,9 @@
   "version": "0.2.0",
   "description": "A simple Ajax Loader for AlpineJS",
   "main": "src/index.js",
+  "files": [
+    "src"
+  ],
   "keywords": [
     "AlpineJS",
     "ajax"

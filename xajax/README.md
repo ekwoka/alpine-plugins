@@ -15,20 +15,21 @@
 ```sh
 npm i @ekwoka/x-ajax
 ```
+
 Import to build:
 
 ```js
-import Alpine from "alpinejs";
-import Ajax from "@ekwoka/x-ajax"
+import Alpine from 'alpinejs';
+import Ajax from '@ekwoka/x-ajax';
 
-Alpine.plugin(Ajax)
+Alpine.plugin(Ajax);
 
 window.Alpine = Alpine;
 Alpine.start();
 ```
 
-
 ## Usage
+
 Just feed a URL into `x-ajax` and the children of that element will be replaced by that URL. So long as the expression resolved to a string that can be used in a `fetch`, you'll be golden. This can use a responsive Alpine variable to continually replace the section with new AJAX content.
 
 ```html
@@ -39,10 +40,13 @@ Use the modifier `query` followed by a querySelector string to find a specific e
 
 ```html
 <div x-ajax.query.main="otherThing">...loading</div>
-// will find the <main> inside the fetched resource and only use that
+// will find the
+<main>
+  inside the fetched resource and only use that
 
-<div x-ajax.query.class.thingWrapper="otherThing">...loading</div>
-// class modifier after query will append . to the query for class name support within the query modifier
+  <div x-ajax.query.class.thingWrapper="otherThing">...loading</div>
+  // class modifier after query will append . to the query for class name support within the query modifier
+</main>
 ```
 
 When using a selector to grab multiple elements, use the modifier `all`
@@ -56,23 +60,36 @@ When using a single query selector, use the modifier `replace` to destroy the `x
 
 ```html
 <main x-ajax.query.main.replace="otherThing">...loading</main>
-// will find the <main> inside the fetched resource and replace this element with that element
-
+// will find the
+<main>inside the fetched resource and replace this element with that element</main>
 ```
 
+## Error Handling and Events
+
+`x-ajax` mimics the native object replacement API and emits two events on the element: `load` and `error`. Naturally, `error` fires if there was any error in the process, most likely to be a network error, but will also fire if `x-ajax` cannot find the elements in the returned document. `load` fires after the network call and parsing, but before actually swapping the dom elements, which generally is incapable of producing an error.
+
+As such, these events can be accessed with alpine by
+
+```html
+<div x-ajax.replace="myCoolURL" @load="success = true" @error="error = $event.detail"></div>
+```
+
+These can be used to change the url to a fallback, or to display an error message.
+
 ## Roadmap
-- Add actual error handling
+
 - Add 'Children' when using a query to not use the direct selected tag, but only maintain its children
 
 ## Author
 
 👤 **Eric Kwoka**
 
-* Github: [@ekwoka](https://github.com/ekwoka)
+- Github: [@ekwoka](https://github.com/ekwoka)
 
 ## Show your support
 
 Give a ⭐️ if this project helped you!
 
-***
+---
+
 _This README was generated with ❤️ by [readme-md-generator](https://github.com/kefranabg/readme-md-generator)_
