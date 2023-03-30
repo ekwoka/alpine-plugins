@@ -1,6 +1,6 @@
 {
   "name": "@ekwoka/x-rias",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "A simple Alpine Directive for use with Cloudinary Fetch API for handling Responsive Images",
   "author": "Eric Kwoka",
   "license": "MIT",
@@ -28,13 +28,13 @@
     "lint": "eslint --fix ./src; prettier --write ./src --loglevel error"
   },
   "devDependencies": {
-    "@types/alpinejs": "^3.7.0",
-    "@typescript-eslint/eslint-plugin": "^5.33.1",
-    "@typescript-eslint/parser": "^5.33.1",
-    "eslint": "^8.22.0",
+    "@types/alpinejs": "^3.7.1",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "eslint": "^8.37.0",
     "npm-run-all": "^4.1.5",
-    "prettier": "^2.7.1",
-    "typescript": "^4.7.4"
+    "prettier": "^2.8.7",
+    "typescript": "^5.0.2"
   },
   "peerDependencies": {
     "alpinejs": "3.x"

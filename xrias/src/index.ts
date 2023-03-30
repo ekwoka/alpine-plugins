@@ -14,6 +14,7 @@ export default function (OPTIONS: Config) {
     Alpine.directive(
       'rias',
       (el: HTMLImageElement, { expression }, { effect, evaluateLater }) => {
+        if (!expression) return autoSize && observer.observe(el);
         const evaluate = evaluateLater(expression);
 
         (effect as (fn: () => void) => void)(() => {
@@ -29,7 +30,7 @@ export default function (OPTIONS: Config) {
               .filter(
                 (w) =>
                   !(maxSize || el.dataset.maxSize) ||
-                  w <= (maxSize || el.dataset.maxSize)
+                  w <= (maxSize || Number(el.dataset.maxSize))
               )
               .map(String);
             const src = imgBase.replaceAll('{width}', widths[1] || widths[0]);

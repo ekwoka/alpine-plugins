@@ -1,9 +1,9 @@
 # X-RIAS: Responsive Images as a Service
 
-[<img src="https://img.shields.io/npm/v/@ekwoka/x-rias?style=for-the-badge">](https://www.npmjs.com/package/@ekwoka/x-rias)
+[<img src="https://img.shields.io/npm/v/@ekwoka/x-rias?label=%20&style=for-the-badge&logo=pnpm&logoColor=white">](https://www.npmjs.com/package/@ekwoka/x-rias)
 <img src="https://img.shields.io/npm/types/@ekwoka/x-rias?label=%20&amp;logo=typescript&amp;logoColor=white&amp;style=for-the-badge">
-<img src="https://img.shields.io/npm/dt/@ekwoka/x-rias?style=for-the-badge" >
-[<img src="https://img.shields.io/bundlephobia/minzip/@ekwoka/x-rias?style=for-the-badge">](https://bundlephobia.com/package/@ekwoka/x-rias)
+<img src="https://img.shields.io/npm/dt/@ekwoka/x-rias?style=for-the-badge&logo=npm&logoColor=white" >
+[<img src="https://img.shields.io/bundlephobia/minzip/@ekwoka/x-rias?style=for-the-badge&logo=esbuild&logoColor=white">](https://bundlephobia.com/package/@ekwoka/x-rias)
 
 > A simple Alpine Directive for use with Cloudinary Fetch API or Shopify's on the fly image processing for handling Responsive Images. Feed your Cloudinary Key (or a variety of options) into the plugin and you're off to the races.
 
