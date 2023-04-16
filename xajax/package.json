@@ -3,6 +3,14 @@
   "version": "0.3.0",
   "description": "A simple Ajax Loader for AlpineJS",
   "main": "src/index.js",
+  "module": "src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./src/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "files": [
     "src"
   ],

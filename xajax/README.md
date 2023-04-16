@@ -44,7 +44,7 @@ Use the modifier `query` followed by a querySelector string to find a specific e
 <main>
   inside the fetched resource and only use that
 
-  <div x-ajax.query.class.thingWrapper="otherThing">...loading</div>
+  <div x-ajax.query.class.thing-wrapper="otherThing">...loading</div>
   // class modifier after query will append . to the query for class name support within the query modifier
 </main>
 ```
