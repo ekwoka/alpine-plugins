@@ -3,8 +3,9 @@
   "include": ["src/**/*"],
   "compilerOptions": {
     "declaration": true,
-    "outDir": "dist",
     "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
     "target": "ESNext",
     "module": "es2020",
     "moduleResolution": "node"
