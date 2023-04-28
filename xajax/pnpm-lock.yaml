@@ -1,0 +1,24 @@
+lockfileVersion: '6.0'
+
+dependencies:
+  alpinejs:
+    specifier: 3.x
+    version: 3.0.0
+
+packages:
+
+  /@vue/reactivity@3.2.47:
+    resolution: {integrity: sha512-7khqQ/75oyyg+N/e+iwV6lpy1f5wq759NdlS1fpAhFXa8VeAIKGgk2E/C4VF59lx5b+Ezs5fpp/5WsRYXQiKxQ==}
+    dependencies:
+      '@vue/shared': 3.2.47
+    dev: false
+
+  /@vue/shared@3.2.47:
+    resolution: {integrity: sha512-BHGyyGN3Q97EZx0taMQ+OLNuZcW3d37ZEVmEAyeoA9ERdGvm9Irc/0Fua8SNyOtV1w6BS4q25wbMzJujO9HIfQ==}
+    dev: false
+
+  /alpinejs@3.0.0:
+    resolution: {integrity: sha512-g86ksY6nYLOcEYd/15kj11+iPX8f+8o0/uSHu0CIJK8GbWlQXx58yaljpaBrp9jB1UgV2YsOQ7ErXBLlF1i8Mg==}
+    dependencies:
+      '@vue/reactivity': 3.2.47
+    dev: false
