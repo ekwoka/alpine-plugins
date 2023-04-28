@@ -17,7 +17,7 @@ export const getCloudinaryUrl = (value: string, cloudURL: string): string => {
 export const getShopifyUrl = (value: string): string => {
   if (value.includes('{width}')) return value;
   if (regexp.test(value)) return value.replace(regexp, '_{width}x$1');
-  return value.replace(/.jpg|.png/g, `_{width}x$&`);
+  return value.replace(/\.(jpg|png)/g, `_{width}x$&`);
 };
 
 const regexp = /_\d+x(\.jpg|\.png)/;
