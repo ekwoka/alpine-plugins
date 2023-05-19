@@ -1,6 +1,6 @@
 import { Alpine } from 'alpinejs';
 import { observer } from './resizeObserver.js';
-import { getBaseUrl } from './utils.js';
+import { getURLMaker } from './utils.js';
 
 export default function (OPTIONS: Config) {
   const {
@@ -20,24 +20,18 @@ export default function (OPTIONS: Config) {
         (effect as (fn: () => void) => void)(() => {
           evaluate((value: string) => {
             if (!value || typeof value !== 'string') return;
-            const imgBase = getBaseUrl(value, shopify, cloudURL);
-            if (!imgBase.includes('{width}')) return (el.src = imgBase);
+            const makeImg = getURLMaker(value, shopify, cloudURL);
 
             const widths = [
               180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2160, 2376,
               2592, 2808, 3024,
-            ]
-              .filter(
-                (w) =>
-                  !(maxSize || el.dataset.maxSize) ||
-                  w <= (maxSize || Number(el.dataset.maxSize))
-              )
-              .map(String);
-            const src = imgBase.replaceAll('{width}', widths[1] || widths[0]);
-            const srcset = widths
-              .map((w) => `${imgBase.replaceAll('{width}', w)} ${w}w`)
-              .join(',');
-
+            ].filter(
+              (w) =>
+                !(maxSize || el.dataset.maxSize) ||
+                w <= (maxSize || Number(el.dataset.maxSize))
+            );
+            const src = makeImg(widths[1] || widths[0]);
+            const srcset = widths.map((w) => `${makeImg(w)} ${w}w`).join(',');
             Alpine.mutateDom(() => {
               el.src = src;
               el.srcset = srcset;
