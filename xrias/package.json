@@ -1,6 +1,6 @@
 {
   "name": "@ekwoka/x-rias",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A simple Alpine Directive for use with Cloudinary Fetch API for handling Responsive Images",
   "author": "Eric Kwoka",
   "license": "MIT",
