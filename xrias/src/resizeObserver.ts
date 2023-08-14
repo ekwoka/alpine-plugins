@@ -1,22 +1,24 @@
-const debounceObserver = <F extends ResizeObserverCallback>(
-  fn: F,
-  delay: number
+const debounceObserver = (
+  fn: (elements: Set<HTMLElement>, observer: ResizeObserver) => void,
+  delay: number,
 ): ResizeObserverCallback => {
   let timer: number;
+  const allElements = new Set<HTMLElement>();
   return function (
     entries: ResizeObserverEntry[],
-    observer: ResizeObserver
+    observer: ResizeObserver,
   ): void {
     if (timer) clearTimeout(timer);
+    entries.forEach(({ target }) => allElements.add(target as HTMLElement));
     timer = setTimeout(() => {
-      fn(entries, observer);
+      fn(allElements, observer);
       timer = null;
     }, delay);
   };
 };
 
-const observerCB: ResizeObserverCallback = (entries) => {
-  entries.forEach(({ target }) => resize(target as HTMLElement));
+const observerCB = (els: Set<HTMLElement>) => {
+  els.forEach((el) => resize(el));
 };
 
 const resize = (el: HTMLElement) => {

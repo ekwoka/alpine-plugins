@@ -1,7 +1,7 @@
 export const getURLMaker = (
   value: string,
   onShopify: boolean,
-  cloudURL: string
+  cloudURL: string,
 ): ((width: number) => string) => {
   if (onShopify) return getShopifyUrl(value);
   if (cloudURL) return getCloudinaryUrl(value, cloudURL);
@@ -10,7 +10,7 @@ export const getURLMaker = (
 
 export const getCloudinaryUrl = (
   value: string,
-  cloudURL: string
+  cloudURL: string,
 ): ((width: number) => string) => {
   value = new URL(value, document.baseURI).href;
   if (value.includes('localhost')) return () => value;

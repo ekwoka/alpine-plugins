@@ -28,7 +28,7 @@ export default function (OPTIONS: Config) {
             ].filter(
               (w) =>
                 !(maxSize || el.dataset.maxSize) ||
-                w <= (maxSize || Number(el.dataset.maxSize))
+                w <= (maxSize || Number(el.dataset.maxSize)),
             );
             const src = makeImg(widths[1] || widths[0]);
             const srcset = widths.map((w) => `${makeImg(w)} ${w}w`).join(',');
@@ -40,7 +40,7 @@ export default function (OPTIONS: Config) {
             });
           });
         });
-      }
+      },
     );
   };
 }
