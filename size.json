@@ -1,32 +1,32 @@
 {
-  "core": {
+  "xajax": {
     "minified": {
-      "pretty": "782 B",
-      "raw": 782
+      "pretty": "944 B",
+      "raw": 944
     },
     "brotli": {
-      "pretty": "421 B",
-      "raw": 421
+      "pretty": "445 B",
+      "raw": 445
     }
   },
-  "reactivity": {
+  "xrias": {
     "minified": {
-      "pretty": "4.73 kB",
-      "raw": 4728
+      "pretty": "1.67 kB",
+      "raw": 1665
     },
     "brotli": {
-      "pretty": "1.61 kB",
-      "raw": 1615
+      "pretty": "815 B",
+      "raw": 815
     }
   },
-  "alpinejs": {
+  "xrouter": {
     "minified": {
-      "pretty": "35.9 kB",
-      "raw": 35851
+      "pretty": "3.39 kB",
+      "raw": 3388
     },
     "brotli": {
-      "pretty": "11.9 kB",
-      "raw": 11945
+      "pretty": "1.28 kB",
+      "raw": 1278
     }
   }
 }

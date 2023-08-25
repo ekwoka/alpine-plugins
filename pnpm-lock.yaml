@@ -74,15 +74,27 @@ importers:
         specifier: 0.1.0
         version: 0.1.0(vitest@0.34.2)
 
-  packages/alpinejs:
+  packages/xajax:
     dependencies:
-      '@timber/reactivity':
-        specifier: workspace:^
-        version: link:../reactivity
+      alpinejs:
+        specifier: 3.x
+        version: 3.0.0
 
-  packages/core: {}
+  packages/xrias:
+    dependencies:
+      alpinejs:
+        specifier: 3.x
+        version: 3.0.0
+    devDependencies:
+      '@types/alpinejs':
+        specifier: 3.7.1
+        version: 3.7.1
 
-  packages/reactivity: {}
+  packages/xrouter:
+    dependencies:
+      alpinejs:
+        specifier: 3.x
+        version: 3.0.0
 
 packages:
 
@@ -831,6 +843,12 @@ packages:
       - supports-color
     dev: true
 
+  /@types/alpinejs@3.7.1:
+    resolution: {integrity: sha512-gzwyuHXH/meGQQhurMGWlZgMQxe18lMOoSPd7X6CvGoDelHte9EsU7SpTIoRu8yYir0tbHDeaSMdX9LeQz/QtA==}
+    dependencies:
+      '@vue/reactivity': 3.3.4
+    dev: true
+
   /@types/argparse@1.0.38:
     resolution: {integrity: sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==}
     dev: true
@@ -1106,11 +1124,9 @@ packages:
     resolution: {integrity: sha512-kLTDLwd0B1jG08NBF3R5rqULtv/f8x3rOFByTDz4J53ttIQEDmALqKqXY0J+XQeN0aV2FBxY8nJDf88yvOPAqQ==}
     dependencies:
       '@vue/shared': 3.3.4
-    dev: true
 
   /@vue/shared@3.3.4:
     resolution: {integrity: sha512-7OjdcV8vQ74eiz1TZLzZP4JwqM5fA94K6yntPS5Z25r9HDuGNzaGdgvwKYq6S+MxwF0TFRwe50fIR/MYnakdkQ==}
-    dev: true
 
   /@vue/typescript@1.8.8(typescript@5.1.6):
     resolution: {integrity: sha512-jUnmMB6egu5wl342eaUH236v8tdcEPXXkPgj+eI/F6JwW/lb+yAU6U07ZbQ3MVabZRlupIlPESB7ajgAGixhow==}
@@ -1152,6 +1168,12 @@ packages:
       json-schema-traverse: 0.4.1
       uri-js: 4.4.1
     dev: true
+
+  /alpinejs@3.0.0:
+    resolution: {integrity: sha512-g86ksY6nYLOcEYd/15kj11+iPX8f+8o0/uSHu0CIJK8GbWlQXx58yaljpaBrp9jB1UgV2YsOQ7ErXBLlF1i8Mg==}
+    dependencies:
+      '@vue/reactivity': 3.3.4
+    dev: false
 
   /ansi-escapes@5.0.0:
     resolution: {integrity: sha512-5GFMVX8HqE/TB+FuBJGuO5XG0WrsA6ptUqoODaT/n9mmUaZFkqnBueB4leqGBCmrUHnCnC4PCZTCd0E7QQ83bA==}
