@@ -1,0 +1,55 @@
+{
+  "name": "@ekwoka/x-ajax",
+  "version": "0.3.1",
+  "description": "A simple Ajax Loader for AlpineJS",
+  "author": {
+    "name": "Eric Kwoka",
+    "email": "eric@thekwoka.net",
+    "url": "https://thekwoka.net/"
+  },
+  "license": "MIT",
+  "keywords": [
+    "AlpineJS",
+    "ajax",
+    "htmx"
+  ],
+  "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "main": "dist/",
+  "types": "dist/",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./dist": "./dist/",
+    "./src": "./src/"
+  },
+  "scripts": {
+    "build": "vite build",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint --fix ./src; prettier --write ./src --loglevel error",
+    "lint:check": "eslint --max-warnings 10 ./src && prettier --check ./src",
+    "prebuild": "rm -rf dist",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/alpinejs": "3.7.1"
+  },
+  "peerDependencies": {
+    "alpinejs": "3.x"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "bracketSameLine": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekwoka/alpine-plugins"
+  },
+  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/xajax/README.md"
+}

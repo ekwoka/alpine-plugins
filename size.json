@@ -1,0 +1,32 @@
+{
+  "xajax": {
+    "minified": {
+      "pretty": "1.2 kB",
+      "raw": 1203
+    },
+    "brotli": {
+      "pretty": "505 B",
+      "raw": 505
+    }
+  },
+  "xrias": {
+    "minified": {
+      "pretty": "1.67 kB",
+      "raw": 1669
+    },
+    "brotli": {
+      "pretty": "818 B",
+      "raw": 818
+    }
+  },
+  "xrouter": {
+    "minified": {
+      "pretty": "3.39 kB",
+      "raw": 3388
+    },
+    "brotli": {
+      "pretty": "1.28 kB",
+      "raw": 1278
+    }
+  }
+}
