@@ -2,7 +2,11 @@
   "name": "@ekwoka/x-rias",
   "version": "1.2.1",
   "description": "A simple Alpine Directive for use with Cloudinary Fetch API for handling Responsive Images",
-  "author": "Eric Kwoka",
+  "author": {
+    "name": "Eric Kwoka",
+    "email": "eric@thekwoka.com",
+    "url": "https://thekwoka.net/"
+  },
   "license": "MIT",
   "keywords": [
     "AlpineJS",
@@ -28,13 +32,12 @@
     "./src": "./src/"
   },
   "scripts": {
+    "build": "vite build",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint --fix ./src; prettier --write ./src --loglevel error",
+    "lint:check": "eslint --max-warnings 10 ./src && prettier --check ./src",
     "prebuild": "rm -rf dist",
-    "build": "run-s lint tsc",
-    "tsc": "tsc",
-    "major": "pnpm build && pnpm version major && pnpm publish",
-    "minor": "pnpm build && pnpm version minor && pnpm publish",
-    "patch": "pnpm build && pnpm version patch && pnpm publish",
-    "lint": "eslint --fix ./src; prettier --write ./src --loglevel error"
+    "test": "vitest"
   },
   "devDependencies": {
     "@types/alpinejs": "3.7.1",

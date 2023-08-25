@@ -1,13 +1,16 @@
 {
-  // Change this to match your project
   "include": ["src/**/*"],
+  "exclude": ["src/**/*.spec.ts", "src/**/*.test.ts"],
   "compilerOptions": {
+    "types": ["vitest/importMeta", "vitest/globals"],
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true,
+    "esModuleInterop": true,
+    "module": "es2022",
+    "moduleResolution": "node",
     "outDir": "dist",
-    "target": "ESNext",
-    "module": "es2020",
-    "moduleResolution": "node"
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "esNext"
   }
 }
