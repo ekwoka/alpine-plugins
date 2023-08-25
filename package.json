@@ -1,0 +1,73 @@
+{
+  "name": "alpine-plugins",
+  "private": true,
+  "type": "module",
+  "author": {
+    "name": "Eric Kwoka",
+    "email": "eric@thekwoka.net",
+    "url": "https://thekwoka.net/"
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm run -r build",
+    "doctor": "run-s lint test:run build size",
+    "lint": "run-s lint:*",
+    "lint:eslint": "eslint --fix ./**/src/*",
+    "lint:prettier": "prettier --write ./**/src/*",
+    "lint:staged": "lint-staged",
+    "precommit": "run-s lint:staged build size",
+    "prepare": "husky install",
+    "size": "node scripts/getSize.js",
+    "postinstall": "patch-package",
+    "test": "vitest",
+    "test:run": "vitest --run"
+  },
+  "devDependencies": {
+    "@milahu/patch-package": "6.4.14",
+    "@trivago/prettier-plugin-sort-imports": "4.2.0",
+    "@types/node": "20.5.1",
+    "@typescript-eslint/eslint-plugin": "6.4.0",
+    "@typescript-eslint/parser": "6.4.0",
+    "@vitest/ui": "0.34.2",
+    "esbuild": "0.19.2",
+    "eslint": "8.47.0",
+    "happy-dom": "9.1.9",
+    "husky": "8.0.3",
+    "lint-staged": "14.0.0",
+    "npm-run-all": "4.1.5",
+    "prettier": "3.0.2",
+    "pretty-bytes": "6.1.1",
+    "typescript": "5.1.6",
+    "vite": "4.4.9",
+    "vite-plugin-dts": "3.5.2",
+    "vite-tsconfig-paths": "4.2.0",
+    "vitest": "0.34.2",
+    "vitest-dom": "0.1.0"
+  },
+  "lint-staged": {
+    "*.{js,ts,mjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,html,css}": [
+      "prettier --write"
+    ]
+  },
+  "prettier": {
+    "singleQuote": true,
+    "bracketSameLine": true,
+    "plugins": [
+      "@trivago/prettier-plugin-sort-imports"
+    ],
+    "importOrder": [],
+    "importOrderSeparation": true,
+    "importOrderSortSpecifiers": true
+  },
+  "pnpm": {
+    "overrides": {
+      "happy-dom@>9.1.9": "9.1.9",
+      "typescript@<5.1.6": "5.1.6",
+      "semver@<7.5.2": ">=7.5.2"
+    }
+  }
+}

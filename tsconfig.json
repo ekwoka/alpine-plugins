@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "@/timberts/*": ["./packages/timberts/src/*"]
+    },
+    "types": ["vitest/globals", "vitest/importMeta"],
+    "allowJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "module": "es2020",
+    "moduleResolution": "node",
+    "target": "ESNext"
+  }
+}
