@@ -2,21 +2,53 @@
   "name": "@ekwoka/x-router",
   "version": "0.2.0",
   "description": "A Router plugin for AlpineJS",
-  "main": "src/index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "author": {
+    "name": "Eric Kwoka",
+    "email": "eric@thekwoka.net",
+    "url": "https://thekwoka.net/"
   },
+  "license": "MIT",
   "keywords": [
     "AlpineJS",
     "router"
   ],
-  "author": "Eric Kwoka",
-  "license": "MIT",
+  "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "main": "dist/",
+  "types": "dist/",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./dist": "./dist/",
+    "./src": "./src/"
+  },
+  "scripts": {
+    "build": "vite build",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint --fix ./src; prettier --write ./src --loglevel error",
+    "lint:check": "eslint --max-warnings 10 ./src && prettier --check ./src",
+    "prebuild": "rm -rf dist",
+    "test": "vitest"
+  },
+  "devDependencies": {
+    "@types/alpinejs": "3.7.1"
+  },
   "peerDependencies": {
     "alpinejs": "3.x"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "bracketSameLine": true
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/ekwoka/alpine-plugins"
-  }
+  },
+  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/xrouter/README.md"
 }
