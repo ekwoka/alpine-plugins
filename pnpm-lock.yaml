@@ -79,6 +79,10 @@ importers:
       alpinejs:
         specifier: 3.x
         version: 3.0.0
+    devDependencies:
+      '@types/alpinejs':
+        specifier: 3.7.1
+        version: 3.7.1
 
   packages/xrias:
     dependencies:
@@ -95,6 +99,10 @@ importers:
       alpinejs:
         specifier: 3.x
         version: 3.0.0
+    devDependencies:
+      '@types/alpinejs':
+        specifier: 3.7.1
+        version: 3.7.1
 
 packages:
 
