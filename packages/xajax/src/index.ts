@@ -1,11 +1,11 @@
-const xParser = new DOMParser();
+import { Alpine } from 'alpinejs';
 
-export default function (Alpine) {
+export default function (Alpine: Alpine) {
   Alpine.directive(
     'ajax',
-    (el, { expression, modifiers }, { effect, evaluateLater }) => {
+    (el: Element, { expression, modifiers }, { effect, evaluateLater }) => {
       const target = evaluateLater(expression);
-      let query;
+      let query = '';
 
       if (modifiers.includes('query'))
         query =
@@ -15,8 +15,8 @@ export default function (Alpine) {
           ];
       if (modifiers.includes('class')) query = '.' + query;
 
-      effect(() => {
-        target(async (target) => {
+      (effect as (fn: () => void) => void)(() => {
+        target(async (target: string) => {
           if (!target)
             return el.dispatchEvent(
               new CustomEvent('halted', {
@@ -24,30 +24,26 @@ export default function (Alpine) {
                 ...eventDefaults,
               }),
             );
-          try {
-            const response = await fetch(target, { mode: 'no-cors' });
-            if (!response.ok) throw new Error(response.statusText);
-            const content = await response.text();
-            const doc = xParser.parseFromString(content, 'text/html');
-            const selector = query
-              ? modifiers.includes('all')
-                ? doc.body.querySelectorAll(query)
-                : doc.body.querySelector(query)
-              : doc.body;
-            if (!selector) throw new Error('Selected element not found');
+          const content = await fetchHTML(target);
+          if (content instanceof CustomEvent) return el.dispatchEvent(content);
+          const doc = parseDom(content);
+          if (doc instanceof CustomEvent) return el.dispatchEvent(doc);
+          const selector = query
+            ? modifiers.includes('all')
+              ? doc.body.querySelectorAll(query)
+              : doc.body.querySelector(query)
+            : doc.body;
+          if (!selector) throw new Error('Selected element not found');
 
-            el.dispatchEvent(new Event('load', eventDefaults));
-            if (modifiers.includes('replace')) return el.replaceWith(selector);
+          el.dispatchEvent(new Event('load', eventDefaults));
+          if (selector instanceof NodeList) {
             if (modifiers.includes('all'))
               return el.replaceChildren(...selector);
+          } else {
+            if (modifiers.includes('replace')) return el.replaceWith(selector);
             if (selector.tagName == 'BODY')
               return el.replaceChildren(...selector.children);
             return el.replaceChildren(selector);
-          } catch (e) {
-            console.error(e);
-            el.dispatchEvent(
-              new Event('error', { detail: e, ...eventDefaults }),
-            );
           }
         });
       });
@@ -57,4 +53,25 @@ export default function (Alpine) {
 
 const eventDefaults = {
   bubbles: false,
+};
+
+const fetchHTML = async (url: string) => {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(response.statusText);
+    return await response.text();
+  } catch (e) {
+    console.error(e);
+    return new CustomEvent('error', { detail: e, ...eventDefaults });
+  }
+};
+
+const xParser = new DOMParser();
+const parseDom = (html: string) => {
+  try {
+    return xParser.parseFromString(html, 'text/html');
+  } catch (e) {
+    console.error(e);
+    return new CustomEvent('error', { detail: e, ...eventDefaults });
+  }
 };

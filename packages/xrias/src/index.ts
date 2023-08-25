@@ -8,7 +8,7 @@ export default function (OPTIONS: Config) {
     shopify = false,
     maxSize = 0,
     cloudURL = '',
-  } = parseOptions(OPTIONS);
+  } = parseOptions(OPTIONS) ?? {};
 
   return (Alpine: Alpine) => {
     Alpine.directive(
