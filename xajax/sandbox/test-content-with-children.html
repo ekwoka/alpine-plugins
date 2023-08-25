@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>X-Ajax</title>
+    <script type="module">
+      import AJAX from '../src/index.js';
+      import Alpine from 'https://esm.sh/alpinejs';
+
+      Alpine.plugin(AJAX);
+
+      window.Alpine = Alpine;
+      Alpine.start();
+    </script>
+  </head>
+  <body>
+    
+	// This is a page of content to test x-ajax with children
+	<div>
+		<div class="empty-div"></div>
+		<div class="text-element">This is a div with plain text.</div>
+		<div class="nested-div">
+			<div class="inner-div">
+				<p>Paragraph inside inner div.</p>
+			</div>
+		</div>
+		<div class="multiple-divs">
+			<div>
+				First child div.
+				<span>Child of first child div.</span>
+			</div>
+			<div>
+				Second child div.
+				<span>Child of second child div.</span>
+			</div>
+		</div>
+	</div>
+    
+  </body>
+</html>
