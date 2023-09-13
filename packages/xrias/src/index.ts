@@ -1,6 +1,6 @@
 import { Alpine } from 'alpinejs';
 import { observer } from './resizeObserver.js';
-import { getURLMaker } from './utils.js';
+import { getURLMaker, makeSrcSet } from './utils.js';
 
 export default function (OPTIONS: Config) {
   const {
@@ -13,7 +13,10 @@ export default function (OPTIONS: Config) {
   return (Alpine: Alpine) => {
     Alpine.directive(
       'rias',
-      (el: HTMLImageElement, { expression }, { effect, evaluateLater }) => {
+      (el, { expression }, { effect, evaluateLater, cleanup }) => {
+        if (!(el instanceof HTMLImageElement))
+          return console.warn('x-rias only works on img elements');
+        cleanup(() => observer.unobserve(el));
         if (!expression) return autoSize && observer.observe(el);
         const evaluate = evaluateLater(expression);
 
@@ -21,17 +24,10 @@ export default function (OPTIONS: Config) {
           evaluate((value: string) => {
             if (!value || typeof value !== 'string') return;
             const makeImg = getURLMaker(value, shopify, cloudURL);
+            const max = maxSize || Number(el.dataset.maxSize) || Infinity;
 
-            const widths = [
-              180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2160, 2376,
-              2592, 2808, 3024,
-            ].filter(
-              (w) =>
-                !(maxSize || el.dataset.maxSize) ||
-                w <= (maxSize || Number(el.dataset.maxSize)),
-            );
-            const src = makeImg(widths[1] || widths[0]);
-            const srcset = widths.map((w) => `${makeImg(w)} ${w}w`).join(',');
+            const src = makeImg(Math.min(max, 360));
+            const srcset = makeSrcSet(makeImg, max);
             Alpine.mutateDom(() => {
               el.src = src;
               el.srcset = srcset;
@@ -42,6 +38,16 @@ export default function (OPTIONS: Config) {
         });
       },
     );
+
+    const $rias = {
+      srcset(value: string) {
+        return makeSrcSet(getURLMaker(value, shopify, cloudURL), maxSize);
+      },
+      observe: observer.observe.bind(observer),
+      unobserve: observer.unobserve.bind(observer),
+    };
+
+    Alpine.magic('rias', () => $rias);
   };
 }
 

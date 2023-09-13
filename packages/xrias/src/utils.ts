@@ -31,4 +31,19 @@ export const getShopifyUrl = (value: string): ((width: number) => string) => {
   };
 };
 
+export const widths = [
+  180, 360, 540, 720, 900, 1080, 1296, 1512, 1728, 1944, 2160, 2376, 2592, 2808,
+  3024,
+];
+
+export const makeSrcSet = (
+  urlGenerator: (v: number) => string,
+  maxSize = Infinity,
+): string => {
+  return widths
+    .filter((w) => w <= maxSize)
+    .map((w) => `${urlGenerator(w)} ${w}w`)
+    .join(',');
+};
+
 const regexp = /_\d+x(\.jpg|\.png)/;

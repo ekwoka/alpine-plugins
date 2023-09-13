@@ -11,12 +11,12 @@
   },
   "xrias": {
     "minified": {
-      "pretty": "1.86 kB",
-      "raw": 1856
+      "pretty": "2.11 kB",
+      "raw": 2106
     },
     "brotli": {
-      "pretty": "909 B",
-      "raw": 909
+      "pretty": "1.04 kB",
+      "raw": 1036
     }
   },
   "xrouter": {
