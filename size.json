@@ -12,11 +12,11 @@
   "xrias": {
     "minified": {
       "pretty": "2.11 kB",
-      "raw": 2106
+      "raw": 2111
     },
     "brotli": {
       "pretty": "1.04 kB",
-      "raw": 1036
+      "raw": 1037
     }
   },
   "xrouter": {

@@ -41,7 +41,10 @@ export default function (OPTIONS: Config) {
 
     const $rias = {
       srcset(value: string) {
-        return makeSrcSet(getURLMaker(value, shopify, cloudURL), maxSize);
+        return makeSrcSet(
+          getURLMaker(value, shopify, cloudURL),
+          maxSize || Infinity,
+        );
       },
       observe: observer.observe.bind(observer),
       unobserve: observer.unobserve.bind(observer),
