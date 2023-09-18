@@ -21,12 +21,12 @@
   },
   "xrouter": {
     "minified": {
-      "pretty": "3.39 kB",
-      "raw": 3388
+      "pretty": "1.29 kB",
+      "raw": 1291
     },
     "brotli": {
-      "pretty": "1.28 kB",
-      "raw": 1278
+      "pretty": "552 B",
+      "raw": 552
     }
   }
 }

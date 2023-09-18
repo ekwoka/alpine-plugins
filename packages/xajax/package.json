@@ -1,6 +1,6 @@
 {
   "name": "@ekwoka/x-ajax",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "A simple Ajax Loader for AlpineJS",
   "author": {
     "name": "Eric Kwoka",
@@ -34,11 +34,9 @@
     "coverage": "vitest run --coverage",
     "lint": "eslint --fix ./src; prettier --write ./src --loglevel error",
     "lint:check": "eslint --max-warnings 10 ./src && prettier --check ./src",
+    "lint:types": "tsc --noEmit",
     "prebuild": "rm -rf dist",
     "test": "vitest"
-  },
-  "devDependencies": {
-    "@types/alpinejs": "3.7.2"
   },
   "peerDependencies": {
     "alpinejs": "3.x"
