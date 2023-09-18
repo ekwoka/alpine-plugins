@@ -18,7 +18,7 @@ export default function (OPTIONS: Config) {
           return console.warn('x-rias only works on img elements');
         cleanup(() => observer.unobserve(el));
         if (!expression) return autoSize && observer.observe(el);
-        const evaluate = evaluateLater(expression);
+        const evaluate = evaluateLater<string>(expression);
 
         (effect as (fn: () => void) => void)(() => {
           evaluate((value: string) => {

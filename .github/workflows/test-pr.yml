@@ -26,7 +26,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: pnpm/action-setup@v2.2.4
         name: Install pnpm
@@ -70,7 +70,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: pnpm/action-setup@v2.2.4
         name: Install pnpm
@@ -103,6 +103,9 @@ jobs:
       - name: Lint
         run: pnpm run -C ${{ matrix.package }} lint:check
 
+      - name: TypeCheck
+        run: pnpm run -C ${{ matrix.package }} lint:types
+
   Test:
     runs-on: ubuntu-latest
     needs: [collection-packages, cache-modules]
@@ -114,7 +117,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: pnpm/action-setup@v2.2.4
         name: Install pnpm
@@ -158,7 +161,7 @@ jobs:
       - name: Install Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
 
       - uses: pnpm/action-setup@v2.2.4
         name: Install pnpm

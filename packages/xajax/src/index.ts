@@ -4,7 +4,7 @@ export default function (Alpine: Alpine) {
   Alpine.directive(
     'ajax',
     (el: Element, { expression, modifiers }, { effect, evaluateLater }) => {
-      const target = evaluateLater(expression);
+      const target = evaluateLater<string>(expression);
       let query = '';
 
       if (modifiers.includes('query'))
