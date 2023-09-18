@@ -8,9 +8,9 @@ const accessOwnSources = () => {
     name: 'access-own-package-sources',
     enforce: 'pre' as const,
     resolveId(id: string) {
-      if (id.startsWith('@timber') && !id.endsWith('src')) {
+      if (id.startsWith('@ekwoka') && !id.endsWith('src')) {
         return {
-          id: resolve(`./packages/${id.replace('@timber/', '')}/src`),
+          id: resolve(`./packages/${id.replace('@ekwoka/', '')}/src`),
           external: false,
         };
       }
@@ -29,7 +29,9 @@ export default defineConfig({
     include: ['./**/*{.spec,.test}.{ts,tsx}'],
     includeSource: ['./**/*.{ts,tsx}'],
     reporters: ['dot'],
+    environment: 'happy-dom',
     deps: {},
     useAtomics: true,
+    passWithNoTests: true,
   },
 });

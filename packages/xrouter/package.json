@@ -36,9 +36,6 @@
     "prebuild": "rm -rf dist",
     "test": "vitest"
   },
-  "devDependencies": {
-    "@types/alpinejs": "3.7.2"
-  },
   "peerDependencies": {
     "alpinejs": "3.x"
   },

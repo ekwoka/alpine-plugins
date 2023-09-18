@@ -36,4 +36,14 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    globals: true,
+    include: ['./**/*{.spec,.test}.{ts,tsx}'],
+    includeSource: ['./**/*.{ts,tsx}'],
+    reporters: ['dot'],
+    environment: 'happy-dom',
+    deps: {},
+    useAtomics: true,
+    passWithNoTests: true,
+  },
 });
