@@ -1,0 +1,43 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>X RIAS TEST SITE</title>
+    <script type="module" lang="ts">
+      import Alpine from 'alpinejs';
+      import Window from '../src/';
+      const data = Array.from({ length: 100_000 }, (_, i) => i.toString(16));
+      const RIASConfig = {
+        shopify: true,
+        maxSize: 600,
+        autoSizes: true,
+      };
+      Alpine.plugin(Window);
+      Alpine.data('list', () => ({
+        items: data,
+        select: 0,
+      }));
+      Alpine.start();
+    </script>
+  </head>
+  <body
+    x-data="list"
+    style="
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      align-items: center;
+    ">
+    <template x-for="item in items" :key="item">
+      <div
+        @click="select = item"
+        :style="{
+        padding: '1rem 2rem',
+        align: 'center',
+        backgroundColor: $window(items).withValue(() => select.toString(16)).withTransformer((item) => item.toString(16)).setup().get(item.toString(16)) ? 'red' : 'white',
+      }"
+        x-text="item"></div>
+    </template>
+  </body>
+</html>
