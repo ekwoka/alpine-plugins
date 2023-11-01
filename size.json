@@ -1,4 +1,14 @@
 {
+  "params": {
+    "minified": {
+      "pretty": "569 B",
+      "raw": 569
+    },
+    "brotli": {
+      "pretty": "306 B",
+      "raw": 306
+    }
+  },
   "xajax": {
     "minified": {
       "pretty": "1.2 kB",

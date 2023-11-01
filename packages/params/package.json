@@ -1,0 +1,55 @@
+{
+  "name": "@ekwoka/x-rias",
+  "version": "1.3.1",
+  "description": "A simple Alpine Directive for use with Cloudinary Fetch API for handling Responsive Images",
+  "author": {
+    "name": "Eric Kwoka",
+    "email": "eric@thekwoka.net",
+    "url": "https://thekwoka.net/"
+  },
+  "license": "MIT",
+  "keywords": [
+    "AlpineJS",
+    "RIAS",
+    "respimg",
+    "cloudinary",
+    "shopify"
+  ],
+  "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "main": "dist/",
+  "types": "dist/",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./dist": "./dist/",
+    "./src": "./src/"
+  },
+  "scripts": {
+    "build": "vite build",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint --fix ./src; prettier --write ./src --loglevel error",
+    "lint:check": "eslint --max-warnings 10 ./src && prettier --check ./src",
+    "lint:types": "tsc --noEmit",
+    "prebuild": "rm -rf dist",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "alpinejs": "3.x"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "bracketSameLine": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekwoka/alpine-plugins"
+  },
+  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/xrias/README.md"
+}
