@@ -1,0 +1,24 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>X RIAS TEST SITE</title>
+    <script type="module">
+      import Alpine from 'alpinets/src';
+      import query from '../src/index.ts';
+      Alpine.plugin(query);
+      Alpine.data('test', () => ({
+        tab: Alpine.query('tab'),
+        tab2: Alpine.query('tab2'),
+        tabs: [undefined, 'company', 'account', 'user'],
+        index: 0,
+      }));
+      Alpine.start();
+    </script>
+  </head>
+  <body
+    x-data="test"
+    x-text="tab + ',' + tab2"
+    @click="tab2 = tab; tab = tabs[index=(index+1)%tabs.length]"></body>
+</html>
