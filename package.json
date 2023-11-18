@@ -71,5 +71,9 @@
       "typescript@<5.1.6": "5.1.6",
       "semver@<7.5.2": ">=7.5.2"
     }
+  },
+  "dependencies": {
+    "@vue/reactivity": "^3.3.8",
+    "alpinets": "link:../alpinets/packages/alpinets"
   }
 }

@@ -8,19 +8,22 @@ export const query: PluginCallback = (Alpine) => {
   Alpine.effect(() => {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(reactiveParams))
-      for (const v of value) params.append(key, v);
+      for (const v of value) v && params.append(key, v);
     history.replaceState(null, '', `?${params.toString()}`);
   });
 
-  const _query = <T extends string | string[]>() => {
+  const bindQuery = <T extends string | string[]>() => {
     let alias: string;
     return Alpine.interceptor<T>(
       (initialValue, getter, setter, path) => {
         const isArray = Array.isArray(initialValue);
         const lookup = alias || path;
+        reactiveParams[lookup] ??= [];
         const initial =
           (isArray ? reactiveParams[lookup] : reactiveParams[lookup]?.[0]) ??
           initialValue;
+
+        setter(initial as T);
 
         Alpine.effect(() => {
           const value = getter();
@@ -30,9 +33,7 @@ export const query: PluginCallback = (Alpine) => {
 
         Alpine.effect(() => {
           const stored = (
-            isArray
-              ? reactiveParams[lookup]
-              : reactiveParams[lookup]?.[0] ?? initialValue
+            isArray ? reactiveParams[lookup] : reactiveParams[lookup]?.[0]
           ) as T;
           setter(stored);
         });
@@ -48,9 +49,12 @@ export const query: PluginCallback = (Alpine) => {
         }),
     );
   };
+
+  Alpine.query = <T extends string | string[]>(val: T) =>
+    bindQuery<T>()(val) as QueryInterceptor<T>;
 };
 
-type QueryInterceptor<T> = InterceptorObject<T> & {
+type QueryInterceptor<T extends string | string[]> = InterceptorObject<T> & {
   as: (name: string) => QueryInterceptor<T>;
 };
 
@@ -58,7 +62,7 @@ export default query;
 
 declare module 'alpinejs' {
   interface Alpine {
-    query: <T>(val: T) => QueryInterceptor<T>;
+    query: <T extends string | string[]>(val: T) => QueryInterceptor<T>;
   }
 }
 
