@@ -58,6 +58,7 @@ export const query: PluginCallback = (Alpine) => {
   };
 
   Alpine.query = <T>(val: T) => bindQuery<T>()(val) as QueryInterceptor<T>;
+  Alpine.magic('query', () => bindQuery());
 };
 
 type QueryInterceptor<T> = InterceptorObject<T> & {
