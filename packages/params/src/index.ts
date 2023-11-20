@@ -1,60 +1,66 @@
 import type { PluginCallback, InterceptorObject } from 'alpinejs';
 
 export const query: PluginCallback = (Alpine) => {
-  const reactiveParams: Record<string, string[]> = Alpine.reactive({});
-  for (const [key, value] of new URLSearchParams(window.location.search))
-    (reactiveParams[key] ??= []).push(value);
+  const reactiveParams: Record<string, unknown> = Alpine.reactive(
+    fromQueryString(location.search),
+  );
 
-  Alpine.effect(() => {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(reactiveParams))
-      for (const v of value) v && params.append(key, v);
-    history.replaceState(null, '', `?${params.toString()}`);
+  const intoState = () =>
+    Object.assign({}, history.state ?? {}, {
+      query: JSON.parse(JSON.stringify(Alpine.raw(reactiveParams))),
+    });
+
+  window.addEventListener('popstate', (event) => {
+    if (event.state?.query) Object.assign(reactiveParams, event.state.query);
   });
 
-  const bindQuery = <T extends string | string[]>() => {
+  Alpine.effect(() => {
+    if (JSON.stringify(reactiveParams) === JSON.stringify(history.state?.query))
+      return;
+    history.pushState(intoState(), '', `?${toQueryString(reactiveParams)}`);
+  });
+
+  const bindQuery = <T>(): ((initial: T) => QueryInterceptor<T>) => {
     let alias: string;
-    return Alpine.interceptor<T>(
-      (initialValue, getter, setter, path) => {
-        const isArray = Array.isArray(initialValue);
+    const obj: QueryInterceptor<T> = {
+      initialValue: undefined as T,
+      _x_interceptor: true,
+      initialize(data, path) {
         const lookup = alias || path;
-        reactiveParams[lookup] ??= [];
         const initial =
-          (isArray ? reactiveParams[lookup] : reactiveParams[lookup]?.[0]) ??
-          initialValue;
+          retrieveDotNotatedValueFromData(lookup, reactiveParams) ??
+          this.initialValue;
 
-        setter(initial as T);
-
-        Alpine.effect(() => {
-          const value = getter();
-          if (Array.isArray(value)) reactiveParams[lookup] = value;
-          else reactiveParams[lookup][0] = value;
-        });
-
-        Alpine.effect(() => {
-          const stored = (
-            isArray ? reactiveParams[lookup] : reactiveParams[lookup]?.[0]
-          ) as T;
-          setter(stored);
+        const keys = path.split('.');
+        const final = keys[keys.length - 1];
+        data = objectAtPath(keys, data);
+        Object.defineProperty(data, final, {
+          set(value: T) {
+            insertDotNotatedValueIntoData(lookup, value, reactiveParams);
+          },
+          get() {
+            return retrieveDotNotatedValueFromData(lookup, reactiveParams) as T;
+          },
         });
 
         return initial as T;
       },
-      (interceptor) =>
-        Object.assign(interceptor, {
-          as(name: string) {
-            alias = name;
-            return this;
-          },
-        }),
-    );
+      as(name: string) {
+        alias = name;
+        return this;
+      },
+    };
+
+    return (initial) => {
+      obj.initialValue = initial;
+      return obj;
+    };
   };
 
-  Alpine.query = <T extends string | string[]>(val: T) =>
-    bindQuery<T>()(val) as QueryInterceptor<T>;
+  Alpine.query = <T>(val: T) => bindQuery<T>()(val) as QueryInterceptor<T>;
 };
 
-type QueryInterceptor<T extends string | string[]> = InterceptorObject<T> & {
+type QueryInterceptor<T> = InterceptorObject<T> & {
   as: (name: string) => QueryInterceptor<T>;
 };
 
@@ -62,7 +68,7 @@ export default query;
 
 declare module 'alpinejs' {
   interface Alpine {
-    query: <T extends string | string[]>(val: T) => QueryInterceptor<T>;
+    query: <T>(val: T) => QueryInterceptor<T>;
   }
 }
 
@@ -87,7 +93,7 @@ const buildQueryStringEntries = (
 ) => {
   Object.entries(data).forEach(([iKey, iValue]) => {
     const key = baseKey ? `${baseKey}[${iKey}]` : iKey;
-
+    if (iValue === undefined) return;
     if (!isObjectLike(iValue))
       entries.push([
         key,
@@ -102,16 +108,14 @@ const buildQueryStringEntries = (
 };
 
 const fromQueryString = (queryString: string) => {
-  queryString = queryString.replace('?', '');
-
-  if (queryString === '') return {};
+  const data: Record<string, unknown> = {};
+  if (queryString === '') return data;
 
   const entries = new URLSearchParams(queryString).entries();
 
-  const data: Record<string, unknown> = {};
   for (const [key, value] of entries) {
     // Query string params don't always have values... (`?foo=`)
-    if (!value) return;
+    if (!value) continue;
 
     const decoded = value;
 
@@ -126,12 +130,7 @@ const fromQueryString = (queryString: string) => {
   return data;
 };
 
-const insertDotNotatedValueIntoData = (
-  key: string,
-  value: unknown,
-  data: Record<string, unknown>,
-) => {
-  const keys = key.split('.');
+const objectAtPath = (keys: string[], data: Record<string, unknown>) => {
   const final = keys.pop()!;
   while (keys.length) {
     const key = keys.shift()!;
@@ -139,11 +138,31 @@ const insertDotNotatedValueIntoData = (
     // This is where we fill in empty arrays/objects allong the way to the assigment...
     if (data[key] === undefined)
       data[key] = isNaN(Number(keys[0] ?? final)) ? {} : [];
-
     data = data[key] as Record<string, unknown>;
     // Keep deferring assignment until the full key is built up...
   }
+  return data;
+};
+
+const insertDotNotatedValueIntoData = (
+  key: string,
+  value: unknown,
+  data: Record<string, unknown>,
+) => {
+  const keys = key.split('.');
+  const final = keys[keys.length - 1];
+  data = objectAtPath(keys, data);
   data[final] = value;
+};
+
+const retrieveDotNotatedValueFromData = (
+  key: string,
+  data: Record<string, unknown>,
+) => {
+  const keys = key.split('.');
+  const final = keys[keys.length - 1];
+  data = objectAtPath(keys, data);
+  return data[final];
 };
 
 if (import.meta.vitest) {
