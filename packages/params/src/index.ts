@@ -5,44 +5,56 @@ export const query: PluginCallback = (Alpine) => {
     fromQueryString(location.search),
   );
 
-  Alpine.effect(() => {
-    history.replaceState(null, '', `?${toQueryString(reactiveParams)}`);
+  const intoState = () =>
+    Object.assign({}, history.state ?? {}, {
+      query: JSON.parse(JSON.stringify(Alpine.raw(reactiveParams))),
+    });
+
+  window.addEventListener('popstate', (event) => {
+    if (event.state?.query) Object.assign(reactiveParams, event.state.query);
   });
 
-  const bindQuery = <T>() => {
+  Alpine.effect(() => {
+    if (JSON.stringify(reactiveParams) === JSON.stringify(history.state?.query))
+      return;
+    history.pushState(intoState(), '', `?${toQueryString(reactiveParams)}`);
+  });
+
+  const bindQuery = <T>(): ((initial: T) => QueryInterceptor<T>) => {
     let alias: string;
-    return Alpine.interceptor<T>(
-      (initialValue, getter, setter, path) => {
+    const obj: QueryInterceptor<T> = {
+      initialValue: undefined as T,
+      _x_interceptor: true,
+      initialize(data, path) {
         const lookup = alias || path;
         const initial =
           retrieveDotNotatedValueFromData(lookup, reactiveParams) ??
-          initialValue;
+          this.initialValue;
 
-        setter(initial as T);
-
-        Alpine.effect(() => {
-          const value = getter();
-          insertDotNotatedValueIntoData(lookup, value, reactiveParams);
-        });
-
-        Alpine.effect(() => {
-          const stored = retrieveDotNotatedValueFromData(
-            lookup,
-            reactiveParams,
-          ) as T;
-          setter(stored);
+        const keys = path.split('.');
+        const final = keys[keys.length - 1];
+        data = objectAtPath(keys, data);
+        Object.defineProperty(data, final, {
+          set(value: T) {
+            insertDotNotatedValueIntoData(lookup, value, reactiveParams);
+          },
+          get() {
+            return retrieveDotNotatedValueFromData(lookup, reactiveParams) as T;
+          },
         });
 
         return initial as T;
       },
-      (interceptor) =>
-        Object.assign(interceptor, {
-          as(name: string) {
-            alias = name;
-            return this;
-          },
-        }),
-    );
+      as(name: string) {
+        alias = name;
+        return this;
+      },
+    };
+
+    return (initial) => {
+      obj.initialValue = initial;
+      return obj;
+    };
   };
 
   Alpine.query = <T>(val: T) => bindQuery<T>()(val) as QueryInterceptor<T>;
@@ -81,7 +93,7 @@ const buildQueryStringEntries = (
 ) => {
   Object.entries(data).forEach(([iKey, iValue]) => {
     const key = baseKey ? `${baseKey}[${iKey}]` : iKey;
-
+    if (iValue === undefined) return;
     if (!isObjectLike(iValue))
       entries.push([
         key,
@@ -119,12 +131,7 @@ const fromQueryString = (queryString: string) => {
   return data;
 };
 
-const insertDotNotatedValueIntoData = (
-  key: string,
-  value: unknown,
-  data: Record<string, unknown>,
-) => {
-  const keys = key.split('.');
+const objectAtPath = (keys: string[], data: Record<string, unknown>) => {
   const final = keys.pop()!;
   while (keys.length) {
     const key = keys.shift()!;
@@ -132,10 +139,20 @@ const insertDotNotatedValueIntoData = (
     // This is where we fill in empty arrays/objects allong the way to the assigment...
     if (data[key] === undefined)
       data[key] = isNaN(Number(keys[0] ?? final)) ? {} : [];
-
     data = data[key] as Record<string, unknown>;
     // Keep deferring assignment until the full key is built up...
   }
+  return data;
+};
+
+const insertDotNotatedValueIntoData = (
+  key: string,
+  value: unknown,
+  data: Record<string, unknown>,
+) => {
+  const keys = key.split('.');
+  const final = keys[keys.length - 1];
+  data = objectAtPath(keys, data);
   data[final] = value;
 };
 
@@ -144,11 +161,8 @@ const retrieveDotNotatedValueFromData = (
   data: Record<string, unknown>,
 ) => {
   const keys = key.split('.');
-  const final = keys.pop()!;
-  while (keys.length) {
-    const key = keys.shift()!;
-    data = data[key] as Record<string, unknown>;
-  }
+  const final = keys[keys.length - 1];
+  data = objectAtPath(keys, data);
   return data[final];
 };
 

@@ -10,7 +10,7 @@
       Alpine.plugin(query);
       Alpine.data('test', () => ({
         tab: Alpine.query({
-          tab: 'company [one]',
+          tab: 'company, [one]',
           other: 'this \\$!@#%^&*()["thing"]',
         }),
         tabs: [undefined, 'company three', 'account', 'user'],
@@ -22,6 +22,5 @@
   <body
     x-data="test"
     x-text="JSON.stringify(tab,null,2)"
-    x-effect="console.log(JSON.stringify($data, null, 2))"
     @click="tab.other = tab.tab; tab.tab = tabs[index=(index+1)%tabs.length]"></body>
 </html>
