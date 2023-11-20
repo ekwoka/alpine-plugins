@@ -108,7 +108,6 @@ const buildQueryStringEntries = (
 };
 
 const fromQueryString = (queryString: string) => {
-  if (queryString.startsWith('?')) queryString = queryString.slice(1);
   const data: Record<string, unknown> = {};
   if (queryString === '') return data;
 
