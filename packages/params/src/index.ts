@@ -1,69 +1,93 @@
-import type { PluginCallback, InterceptorObject } from 'alpinejs';
+import type { PluginCallback, InterceptorObject, Alpine } from 'alpinejs';
+
+class QueryInterceptor<T> implements InterceptorObject<T> {
+  _x_interceptor = true as const;
+  private alias: string | undefined = undefined;
+  private transformer: Transformer<T> | null = null;
+  private method: 'replaceState' | 'pushState' = 'replaceState';
+  private show: boolean = false;
+  constructor(
+    public initialValue: T,
+    private Alpine: Alpine,
+    private reactiveParams: Record<string, unknown>,
+  ) {}
+  initialize(data: Record<string, unknown>, path: string) {
+    const {
+      alias = path,
+      initialValue,
+      reactiveParams,
+      transformer,
+      show,
+    } = this;
+    const initial =
+      (retrieveDotNotatedValueFromData(alias, reactiveParams) as T) ??
+      initialValue;
+
+    const keys = path.split('.');
+    const final = keys[keys.length - 1];
+    const obj = objectAtPath(keys, data);
+    Object.defineProperty(obj, final, {
+      set: (value: T) => {
+        !show && value === initialValue
+          ? deleteDotNotatedValueFromData(alias, reactiveParams)
+          : insertDotNotatedValueIntoData(alias, value, reactiveParams);
+        this.setParams();
+      },
+      get: () => {
+        const value = (retrieveDotNotatedValueFromData(alias, reactiveParams) ??
+          initialValue) as T;
+        return value;
+      },
+    });
+
+    return transformer?.(initial) ?? initial;
+  }
+  private setParams() {
+    const { reactiveParams, method, Alpine } = this;
+    history[method](
+      intoState(Alpine.raw(reactiveParams)),
+      '',
+      `?${toQueryString(Alpine.raw(reactiveParams))}`,
+    );
+  }
+  as(name: string) {
+    this.alias = name;
+    return this;
+  }
+  into(fn: Transformer<T>) {
+    this.transformer = fn;
+    return this;
+  }
+  alwaysShow() {
+    this.show = true;
+    return this;
+  }
+  usePush() {
+    this.method = 'pushState';
+    return this;
+  }
+}
 
 export const query: PluginCallback = (Alpine) => {
   const reactiveParams: Record<string, unknown> = Alpine.reactive(
     fromQueryString(location.search),
   );
 
-  const intoState = () =>
-    Object.assign({}, history.state ?? {}, {
-      query: JSON.parse(JSON.stringify(Alpine.raw(reactiveParams))),
-    });
-
   window.addEventListener('popstate', (event) => {
-    if (event.state?.query) Object.assign(reactiveParams, event.state.query);
+    if (!event.state?.query) return;
+    if (event.state.query) Object.assign(reactiveParams, event.state.query);
+    for (const key in Alpine.raw(reactiveParams))
+      if (!(key in event.state.query)) delete reactiveParams[key];
   });
 
-  Alpine.effect(() => {
-    if (JSON.stringify(reactiveParams) === JSON.stringify(history.state?.query))
-      return;
-    history.pushState(intoState(), '', `?${toQueryString(reactiveParams)}`);
-  });
+  const bindQuery = <T>(initial: T) =>
+    new QueryInterceptor(initial, Alpine, reactiveParams);
 
-  const bindQuery = <T>(): ((initial: T) => QueryInterceptor<T>) => {
-    let alias: string;
-    const obj: QueryInterceptor<T> = {
-      initialValue: undefined as T,
-      _x_interceptor: true,
-      initialize(data, path) {
-        const lookup = alias || path;
-        const initial =
-          retrieveDotNotatedValueFromData(lookup, reactiveParams) ??
-          this.initialValue;
-
-        const keys = path.split('.');
-        const final = keys[keys.length - 1];
-        data = objectAtPath(keys, data);
-        Object.defineProperty(data, final, {
-          set(value: T) {
-            insertDotNotatedValueIntoData(lookup, value, reactiveParams);
-          },
-          get() {
-            return retrieveDotNotatedValueFromData(lookup, reactiveParams) as T;
-          },
-        });
-
-        return initial as T;
-      },
-      as(name: string) {
-        alias = name;
-        return this;
-      },
-    };
-
-    return (initial) => {
-      obj.initialValue = initial;
-      return obj;
-    };
-  };
-
-  Alpine.query = <T>(val: T) => bindQuery<T>()(val) as QueryInterceptor<T>;
-  Alpine.magic('query', () => bindQuery());
+  Alpine.query = bindQuery;
+  Alpine.magic('query', () => bindQuery);
 };
 
-type QueryInterceptor<T> = InterceptorObject<T> & {
-  as: (name: string) => QueryInterceptor<T>;
-};
+type Transformer<T> = (val: string | T) => T;
 
 export default query;
 
@@ -72,6 +96,11 @@ declare module 'alpinejs' {
     query: <T>(val: T) => QueryInterceptor<T>;
   }
 }
+
+const intoState = (data: Record<string, unknown>) =>
+  Object.assign({}, history.state ?? {}, {
+    query: JSON.parse(JSON.stringify(data)),
+  });
 
 /**
  * Converts Objects to bracketed query strings
@@ -146,24 +175,34 @@ const objectAtPath = (keys: string[], data: Record<string, unknown>) => {
 };
 
 const insertDotNotatedValueIntoData = (
-  key: string,
+  path: string,
   value: unknown,
   data: Record<string, unknown>,
 ) => {
-  const keys = key.split('.');
+  const keys = path.split('.');
   const final = keys[keys.length - 1];
   data = objectAtPath(keys, data);
   data[final] = value;
 };
 
 const retrieveDotNotatedValueFromData = (
-  key: string,
+  path: string,
   data: Record<string, unknown>,
 ) => {
-  const keys = key.split('.');
+  const keys = path.split('.');
   const final = keys[keys.length - 1];
   data = objectAtPath(keys, data);
   return data[final];
+};
+
+const deleteDotNotatedValueFromData = (
+  path: string,
+  data: Record<string, unknown>,
+) => {
+  const keys = path.split('.');
+  const final = keys[keys.length - 1];
+  data = objectAtPath(keys, data);
+  delete data[final];
 };
 
 if (import.meta.vitest) {
