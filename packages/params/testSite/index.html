@@ -9,18 +9,14 @@
       import query from '../src/index.ts';
       Alpine.plugin(query);
       Alpine.data('test', () => ({
-        tab: Alpine.query({
-          tab: 'company, [one]',
-          other: 'this \\$!@#%^&*()["thing"]',
-        }),
-        tabs: [undefined, 'company three', 'account', 'user'],
-        index: 0,
+        count: Alpine.query(0).into(Number),
+        date: Alpine.query(new Date().toString()).as('now').alwaysShow(),
       }));
       Alpine.start();
     </script>
   </head>
-  <body
-    x-data="test"
-    x-text="JSON.stringify(tab,null,2)"
-    @click="tab.other = tab.tab; tab.tab = tabs[index=(index+1)%tabs.length]"></body>
+  <body x-data="test" @click="count--">
+    <div x-text="count"></div>
+    <div x-text="date"></div>
+  </body>
 </html>
