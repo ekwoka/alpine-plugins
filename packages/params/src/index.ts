@@ -1,4 +1,11 @@
 import type { PluginCallback, InterceptorObject, Alpine } from 'alpinejs';
+import { fromQueryString, toQueryString } from './querystring';
+import {
+  retrieveDotNotatedValueFromData,
+  objectAtPath,
+  deleteDotNotatedValueFromData,
+  insertDotNotatedValueIntoData,
+} from './pathresolve';
 
 class QueryInterceptor<T> implements InterceptorObject<T> {
   _x_interceptor = true as const;
@@ -24,8 +31,9 @@ class QueryInterceptor<T> implements InterceptorObject<T> {
       initialValue;
 
     const keys = path.split('.');
-    const final = keys[keys.length - 1];
-    const obj = objectAtPath(keys, data);
+    const final = keys.pop()!;
+    const obj = objectAtPath(keys, data, final);
+
     Object.defineProperty(obj, final, {
       set: (value: T) => {
         !show && value === initialValue
@@ -38,6 +46,7 @@ class QueryInterceptor<T> implements InterceptorObject<T> {
           initialValue) as T;
         return value;
       },
+      enumerable: true,
     });
 
     return transformer?.(initial) ?? initial;
@@ -102,139 +111,163 @@ const intoState = (data: Record<string, unknown>) =>
     query: JSON.parse(JSON.stringify(data)),
   });
 
-/**
- * Converts Objects to bracketed query strings
- * { items: [['foo']] } -> "items[0][0]=foo"
- * @param params Object to convert to query string
- */
-const toQueryString = (data: object) => {
-  const entries = buildQueryStringEntries(data);
-
-  return entries.map((entry) => entry.join('=')).join('&');
-};
-
-const isObjectLike = (subject: unknown): subject is object =>
-  typeof subject === 'object' && subject !== null;
-
-const buildQueryStringEntries = (
-  data: object,
-  entries: [string, string][] = [],
-  baseKey = '',
-) => {
-  Object.entries(data).forEach(([iKey, iValue]) => {
-    const key = baseKey ? `${baseKey}[${iKey}]` : iKey;
-    if (iValue === undefined) return;
-    if (!isObjectLike(iValue))
-      entries.push([
-        key,
-        encodeURIComponent(iValue)
-          .replaceAll('%20', '+') // Conform to RFC1738
-          .replaceAll('%2C', ','),
-      ]);
-    else buildQueryStringEntries(iValue, entries, key);
-  });
-
-  return entries;
-};
-
-const fromQueryString = (queryString: string) => {
-  const data: Record<string, unknown> = {};
-  if (queryString === '') return data;
-
-  const entries = new URLSearchParams(queryString).entries();
-
-  for (const [key, value] of entries) {
-    // Query string params don't always have values... (`?foo=`)
-    if (!value) continue;
-
-    const decoded = value;
-
-    if (!key.includes('[')) data[key] = decoded;
-    else {
-      // Convert to dot notation because it's easier...
-      const dotNotatedKey = key.replaceAll(/\[([^\]]+)\]/g, '.$1');
-      insertDotNotatedValueIntoData(dotNotatedKey, decoded, data);
-    }
-  }
-
-  return data;
-};
-
-const objectAtPath = (keys: string[], data: Record<string, unknown>) => {
-  const final = keys.pop()!;
-  while (keys.length) {
-    const key = keys.shift()!;
-
-    // This is where we fill in empty arrays/objects allong the way to the assigment...
-    if (data[key] === undefined)
-      data[key] = isNaN(Number(keys[0] ?? final)) ? {} : [];
-    data = data[key] as Record<string, unknown>;
-    // Keep deferring assignment until the full key is built up...
-  }
-  return data;
-};
-
-const insertDotNotatedValueIntoData = (
-  path: string,
-  value: unknown,
-  data: Record<string, unknown>,
-) => {
-  const keys = path.split('.');
-  const final = keys[keys.length - 1];
-  data = objectAtPath(keys, data);
-  data[final] = value;
-};
-
-const retrieveDotNotatedValueFromData = (
-  path: string,
-  data: Record<string, unknown>,
-) => {
-  const keys = path.split('.');
-  const final = keys[keys.length - 1];
-  data = objectAtPath(keys, data);
-  return data[final];
-};
-
-const deleteDotNotatedValueFromData = (
-  path: string,
-  data: Record<string, unknown>,
-) => {
-  const keys = path.split('.');
-  const final = keys[keys.length - 1];
-  data = objectAtPath(keys, data);
-  delete data[final];
-};
-
 if (import.meta.vitest) {
-  describe('QueryString', () => {
-    it('builds query string from objects', () => {
-      expect(toQueryString({ foo: 'bar' })).toBe('foo=bar');
-      expect(toQueryString({ foo: ['bar'] })).toBe('foo[0]=bar');
-      expect(toQueryString({ foo: [['bar']] })).toBe('foo[0][0]=bar');
-      expect(toQueryString({ foo: { bar: 'baz' } })).toBe('foo[bar]=baz');
-      expect(toQueryString({ foo: { bar: ['baz'] } })).toBe('foo[bar][0]=baz');
-      expect(toQueryString({ foo: 'bar', fizz: [['buzz']] })).toBe(
-        'foo=bar&fizz[0][0]=buzz',
+  describe('QueryInterceptor', () => {
+    const Alpine = {
+      raw<T>(val: T): T {
+        return val;
+      },
+      reactive<T>(val: T): T {
+        return val;
+      },
+    } as unknown as Alpine;
+    afterEach(() => {
+      vi.restoreAllMocks();
+    });
+    it('defines value on the data', () => {
+      const paramObject = {};
+      const data = { foo: 'bar' };
+      new QueryInterceptor('hello', Alpine, paramObject).initialize(
+        data,
+        'foo',
       );
-      expect(toQueryString({ foo: 'fizz buzz, foo bar' })).toBe(
-        'foo=fizz+buzz,+foo+bar',
+      expect(data).toEqual({ foo: 'hello' });
+    });
+    it('stores value in the params', () => {
+      const paramObject = {};
+      const interceptor = new QueryInterceptor('hello', Alpine, paramObject);
+      const data = { foo: 'bar' };
+      interceptor.initialize(data, 'foo');
+      expect(data).toEqual({ foo: 'hello' });
+      data.foo = 'world';
+      expect(paramObject).toEqual({ foo: 'world' });
+      expect(data).toEqual({ foo: 'world' });
+    });
+    it('returns initial value from initialize', () => {
+      expect(
+        new QueryInterceptor('hello', Alpine, {}).initialize({}, 'foo'),
+      ).toBe('hello');
+    });
+    it('initializes with value from params', () => {
+      const paramObject = { foo: 'hello' };
+      const data = { foo: 'bar' };
+      expect(
+        new QueryInterceptor('hello', Alpine, paramObject).initialize(
+          data,
+          'foo',
+        ),
+      ).toBe('hello');
+      expect(data).toEqual({ foo: 'hello' });
+    });
+    it('updates history state', () => {
+      vi.spyOn(history, 'replaceState');
+      const paramObject = {};
+      const data = { foo: 'bar' };
+      new QueryInterceptor('hello', Alpine, paramObject).initialize(
+        data,
+        'foo',
+      );
+      expect(data).toEqual({ foo: 'hello' });
+      data.foo = 'world';
+      expect(paramObject).toEqual({ foo: 'world' });
+      expect(data).toEqual({ foo: 'world' });
+      expect(history.replaceState).toHaveBeenCalledWith(
+        { query: { foo: 'world' } },
+        '',
+        '?foo=world',
+      );
+      data.foo = 'fizzbuzz';
+      expect(paramObject).toEqual({ foo: 'fizzbuzz' });
+      expect(data).toEqual({ foo: 'fizzbuzz' });
+      expect(history.replaceState).toHaveBeenCalledWith(
+        { query: { foo: 'fizzbuzz' } },
+        '',
+        '?foo=fizzbuzz',
       );
     });
-    it('parses query string to objects', () => {
-      expect(fromQueryString('foo=bar')).toEqual({ foo: 'bar' });
-      expect(fromQueryString('foo[0]=bar')).toEqual({ foo: ['bar'] });
-      expect(fromQueryString('foo[0][0]=bar')).toEqual({ foo: [['bar']] });
-      expect(fromQueryString('foo[bar]=baz')).toEqual({ foo: { bar: 'baz' } });
-      expect(fromQueryString('foo[bar][0]=baz')).toEqual({
-        foo: { bar: ['baz'] },
-      });
-      expect(fromQueryString('foo=bar&fizz[0][0]=buzz')).toEqual({
-        foo: 'bar',
-        fizz: [['buzz']],
-      });
-      expect(fromQueryString('foo=fizz+buzz,+foo+bar')).toEqual({
-        foo: 'fizz buzz, foo bar',
-      });
+    it('can alias the key', () => {
+      vi.spyOn(history, 'replaceState');
+      const paramObject = {};
+      const data = { foo: 'bar' };
+      new QueryInterceptor('hello', Alpine, paramObject)
+        .as('bar')
+        .initialize(data, 'foo');
+      expect(data).toEqual({ foo: 'hello' });
+      data.foo = 'world';
+      expect(paramObject).toEqual({ bar: 'world' });
+      expect(data).toEqual({ foo: 'world' });
+      expect(history.replaceState).toHaveBeenCalledWith(
+        { query: { bar: 'world' } },
+        '',
+        '?bar=world',
+      );
+    });
+    it('can transform the initial query value', () => {
+      const paramObject = { count: '1' };
+      const data = { count: 0 };
+      data.count = new QueryInterceptor(0, Alpine, paramObject)
+        .into(Number)
+        .initialize(data, 'count');
+      expect(data).toEqual({ count: 1 });
+      expect(paramObject).toEqual({ count: 1 });
+    });
+    it('does not display inital value', () => {
+      vi.spyOn(history, 'replaceState');
+      const paramObject = {};
+      const data = { foo: 'bar' };
+      new QueryInterceptor(data.foo, Alpine, paramObject).initialize(
+        data,
+        'foo',
+      );
+      data.foo = 'hello';
+      expect(data).toEqual({ foo: 'hello' });
+      expect(paramObject).toEqual({ foo: 'hello' });
+      data.foo = 'bar';
+      expect(data).toEqual({ foo: 'bar' });
+      expect(paramObject).toEqual({});
+      expect(history.replaceState).toHaveBeenCalledWith({ query: {} }, '', '?');
+    });
+    it('can always show the initial value', () => {
+      vi.spyOn(history, 'replaceState');
+      const paramObject = {};
+      const data = { foo: 'bar' };
+      new QueryInterceptor(data.foo, Alpine, paramObject)
+        .alwaysShow()
+        .initialize(data, 'foo');
+      data.foo = 'hello';
+      expect(data).toEqual({ foo: 'hello' });
+      expect(paramObject).toEqual({ foo: 'hello' });
+      expect(history.replaceState).toHaveBeenCalledWith(
+        { query: { foo: 'hello' } },
+        '',
+        '?foo=hello',
+      );
+      data.foo = 'bar';
+      expect(data).toEqual({ foo: 'bar' });
+      expect(paramObject).toEqual({ foo: 'bar' });
+      expect(history.replaceState).toHaveBeenCalledWith(
+        { query: { foo: 'bar' } },
+        '',
+        '?foo=bar',
+      );
+    });
+    it('can use pushState', () => {
+      vi.spyOn(history, 'replaceState');
+      vi.spyOn(history, 'pushState');
+      const paramObject = {};
+      const data = { foo: 'bar' };
+      new QueryInterceptor(data.foo, Alpine, paramObject)
+        .usePush()
+        .initialize(data, 'foo');
+      data.foo = 'hello';
+      expect(data).toEqual({ foo: 'hello' });
+      expect(paramObject).toEqual({ foo: 'hello' });
+      expect(history.pushState).toHaveBeenCalledWith(
+        { query: { foo: 'hello' } },
+        '',
+        '?foo=hello',
+      );
+      expect(history.replaceState).not.toHaveBeenCalled();
     });
   });
 }
