@@ -7,18 +7,31 @@ import {
   insertDotNotatedValueIntoData,
 } from './pathresolve';
 
-class QueryInterceptor<T> implements InterceptorObject<T> {
+type InnerType<T, S> = T extends PrimitivesToStrings<T>
+  ? T
+  : S extends Transformer<T>
+  ? T
+  : T | PrimitivesToStrings<T>;
+
+export class QueryInterceptor<
+  T,
+  S extends Transformer<T> | undefined = undefined,
+> implements InterceptorObject<InnerType<T, S>>
+{
   _x_interceptor = true as const;
   private alias: string | undefined = undefined;
-  private transformer: Transformer<T> | null = null;
+  private transformer?: S;
   private method: 'replaceState' | 'pushState' = 'replaceState';
   private show: boolean = false;
+  public initialValue: InnerType<T, S>;
   constructor(
-    public initialValue: T,
+    initialValue: T,
     private Alpine: Alpine,
     private reactiveParams: Record<string, unknown>,
-  ) {}
-  initialize(data: Record<string, unknown>, path: string) {
+  ) {
+    this.initialValue = initialValue as InnerType<T, S>;
+  }
+  initialize(data: Record<string, unknown>, path: string): InnerType<T, S> {
     const {
       alias = path,
       initialValue,
@@ -26,9 +39,8 @@ class QueryInterceptor<T> implements InterceptorObject<T> {
       transformer,
       show,
     } = this;
-    const initial =
-      (retrieveDotNotatedValueFromData(alias, reactiveParams) as T) ??
-      initialValue;
+    const initial = (retrieveDotNotatedValueFromData(alias, reactiveParams) ??
+      initialValue) as InnerType<T, S>;
 
     const keys = path.split('.');
     const final = keys.pop()!;
@@ -49,7 +61,7 @@ class QueryInterceptor<T> implements InterceptorObject<T> {
       enumerable: true,
     });
 
-    return transformer?.(initial) ?? initial;
+    return (transformer?.(initial) ?? initial) as InnerType<T, S>;
   }
   private setParams() {
     const { reactiveParams, method, Alpine } = this;
@@ -63,9 +75,10 @@ class QueryInterceptor<T> implements InterceptorObject<T> {
     this.alias = name;
     return this;
   }
-  into(fn: Transformer<T>) {
-    this.transformer = fn;
-    return this;
+  into(fn: Transformer<T>): QueryInterceptor<T, Transformer<T>> {
+    const self = this as QueryInterceptor<T, Transformer<T>>;
+    self.transformer = fn;
+    return self;
   }
   alwaysShow() {
     this.show = true;
@@ -76,6 +89,12 @@ class QueryInterceptor<T> implements InterceptorObject<T> {
     return this;
   }
 }
+
+let thing: InnerType<number, undefined>;
+thing = 42 as NonNullable<number>;
+thing = '42';
+
+console.log(thing);
 
 export const query: PluginCallback = (Alpine) => {
   const reactiveParams: Record<string, unknown> = Alpine.reactive(
@@ -96,7 +115,7 @@ export const query: PluginCallback = (Alpine) => {
   Alpine.magic('query', () => bindQuery);
 };
 
-type Transformer<T> = (val: string | T) => T;
+export type Transformer<T> = (val: T | PrimitivesToStrings<T>) => T;
 
 export default query;
 
@@ -271,3 +290,13 @@ if (import.meta.vitest) {
     });
   });
 }
+
+type PrimitivesToStrings<T> = T extends string | number | boolean | null
+  ? `${T}`
+  : T extends Array<infer U>
+  ? Array<PrimitivesToStrings<U>>
+  : T extends object
+  ? {
+      [K in keyof T]: PrimitivesToStrings<T[K]>;
+    }
+  : T;
