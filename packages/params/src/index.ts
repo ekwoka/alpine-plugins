@@ -13,6 +13,12 @@ type InnerType<T, S> = T extends PrimitivesToStrings<T>
   ? T
   : T | PrimitivesToStrings<T>;
 
+/**
+ * This is the InterceptorObject that is returned from the `query` function.
+ * When inside an Alpine Component or Store, these interceptors are initialized.
+ * This hooks up setter/getter methods to to replace the object itself
+ * and sync the query string params
+ */
 export class QueryInterceptor<
   T,
   S extends Transformer<T> | undefined = undefined,
@@ -26,11 +32,17 @@ export class QueryInterceptor<
   public initialValue: InnerType<T, S>;
   constructor(
     initialValue: T,
-    private Alpine: Alpine,
+    private Alpine: Pick<Alpine, 'raw'>,
     private reactiveParams: Record<string, unknown>,
   ) {
     this.initialValue = initialValue as InnerType<T, S>;
   }
+  /**
+   * Self Initializing interceptor called by Alpine during component initialization
+   * @param {object} data The Alpine Data Object (component or store)
+   * @param {string} path dot notated path from the data root to the interceptor
+   * @returns {T} The value of the interceptor after initialization
+   */
   initialize(data: Record<string, unknown>, path: string): InnerType<T, S> {
     const {
       alias = path,
@@ -63,6 +75,9 @@ export class QueryInterceptor<
 
     return (transformer?.(initial) ?? initial) as InnerType<T, S>;
   }
+  /**
+   * Sets the query string params to the current reactive params
+   */
   private setParams() {
     const { reactiveParams, method, Alpine } = this;
     history[method](
@@ -71,30 +86,39 @@ export class QueryInterceptor<
       `?${toQueryString(Alpine.raw(reactiveParams))}`,
     );
   }
+  /**
+   * Changes the keyname for using in the query string
+   * Keyname defaults to path to data
+   * @param {string} name Key alias
+   */
   as(name: string) {
     this.alias = name;
     return this;
   }
+  /**
+   * Transforms the value of the query param before it is set on the data
+   * @param {function} fn Transformer function
+   */
   into(fn: Transformer<T>): QueryInterceptor<T, Transformer<T>> {
     const self = this as QueryInterceptor<T, Transformer<T>>;
     self.transformer = fn;
     return self;
   }
+  /**
+   * Always show the initial value in the query string
+   */
   alwaysShow() {
     this.show = true;
     return this;
   }
+  /**
+   * Use pushState instead of replaceState
+   */
   usePush() {
     this.method = 'pushState';
     return this;
   }
 }
-
-let thing: InnerType<number, undefined>;
-thing = 42 as NonNullable<number>;
-thing = '42';
-
-console.log(thing);
 
 export const query: PluginCallback = (Alpine) => {
   const reactiveParams: Record<string, unknown> = Alpine.reactive(
@@ -121,11 +145,23 @@ export default query;
 
 declare module 'alpinejs' {
   interface Alpine {
-    query: <T>(val: T) => QueryInterceptor<T>;
+    /**
+     * Sync a search param in the query string with the value in the Alpine Context
+     * @param initialValue Value when the query param is not present
+     * @returns {QueryInterceptor} Self initializing interceptor
+     */
+    query: <T>(initialValue: T) => QueryInterceptor<T>;
   }
 }
 
-const intoState = (data: Record<string, unknown>) =>
+/**
+ * Creates a new object containing the old history state and new query data
+ * @param {object} data Query Data to inject into the current history state
+ * @returns {object} New object for the new history state
+ */
+const intoState = <T extends Record<string, unknown>>(
+  data: Record<string, unknown>,
+): Record<string, unknown> & { query: T } =>
   Object.assign({}, history.state ?? {}, {
     query: JSON.parse(JSON.stringify(data)),
   });
@@ -136,10 +172,7 @@ if (import.meta.vitest) {
       raw<T>(val: T): T {
         return val;
       },
-      reactive<T>(val: T): T {
-        return val;
-      },
-    } as unknown as Alpine;
+    };
     afterEach(() => {
       vi.restoreAllMocks();
     });
