@@ -177,6 +177,12 @@ You may choose to use separate `$query` interceptors to make this simpler.
 
 All normal reactive behaviors apply to the `$query` interceptor. You can hook up effects to them, and just have a grand old time.
 
+## What This Doesn't Do
+
+This plugin does not do anything to manage params not associated with an `$query` interceptor. This means that if you have a query string like `?search=hello&sort=asc` and you only have a `$query` interceptor for `search`, the `sort` param will be perpetuated during query string updates.
+
+This does not directly expose anything for triggering events or handlers on query string changes. As the query interceptors are reactive, you can hook directly into the ones you care about and use Alpine Effects to trigger events or other behaviors.
+
 ## Use outside of Alpine
 
 This Alpine plugin can actually be used outside of Alpine, though it's obviously not ideal for many reason. It's a bit of a hack, but it works!
