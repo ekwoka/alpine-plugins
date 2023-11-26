@@ -19,20 +19,18 @@ type InnerType<T, S> = T extends PrimitivesToStrings<T>
  * This hooks up setter/getter methods to to replace the object itself
  * and sync the query string params
  */
-export class QueryInterceptor<
-  T,
-  S extends Transformer<T> | undefined = undefined,
-> implements InterceptorObject<InnerType<T, S>>
+class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
+  implements InterceptorObject<InnerType<T, S>>
 {
   _x_interceptor = true as const;
   private alias: string | undefined = undefined;
   private transformer?: S;
-  private method: 'replaceState' | 'pushState' = 'replaceState';
+  private method: UpdateMethod = UpdateMethod.replace;
   private show: boolean = false;
   public initialValue: InnerType<T, S>;
   constructor(
     initialValue: T,
-    private Alpine: Pick<Alpine, 'raw'>,
+    private Alpine: Pick<Alpine, 'effect'>,
     private reactiveParams: Record<string, unknown>,
   ) {
     this.initialValue = initialValue as InnerType<T, S>;
@@ -46,10 +44,12 @@ export class QueryInterceptor<
   initialize(data: Record<string, unknown>, path: string): InnerType<T, S> {
     const {
       alias = path,
+      Alpine,
       initialValue,
+      method,
       reactiveParams,
-      transformer,
       show,
+      transformer,
     } = this;
     const initial = (retrieveDotNotatedValueFromData(alias, reactiveParams) ??
       initialValue) as InnerType<T, S>;
@@ -63,7 +63,6 @@ export class QueryInterceptor<
         !show && value === initialValue
           ? deleteDotNotatedValueFromData(alias, reactiveParams)
           : insertDotNotatedValueIntoData(alias, value, reactiveParams);
-        this.setParams();
       },
       get: () => {
         const value = (retrieveDotNotatedValueFromData(alias, reactiveParams) ??
@@ -73,18 +72,9 @@ export class QueryInterceptor<
       enumerable: true,
     });
 
+    Alpine.effect(paramEffect(alias, reactiveParams, method));
+
     return (transformer?.(initial) ?? initial) as InnerType<T, S>;
-  }
-  /**
-   * Sets the query string params to the current reactive params
-   */
-  private setParams() {
-    const { reactiveParams, method, Alpine } = this;
-    history[method](
-      intoState(Alpine.raw(reactiveParams)),
-      '',
-      `?${toQueryString(Alpine.raw(reactiveParams))}`,
-    );
   }
   /**
    * Changes the keyname for using in the query string
@@ -115,7 +105,7 @@ export class QueryInterceptor<
    * Use pushState instead of replaceState
    */
   usePush() {
-    this.method = 'pushState';
+    this.method = UpdateMethod.push;
     return this;
   }
 }
@@ -166,18 +156,40 @@ const intoState = <T extends Record<string, unknown>>(
     query: JSON.parse(JSON.stringify(data)),
   });
 
+const paramEffect = (
+  key: string,
+  params: Record<string, unknown>,
+  method: UpdateMethod,
+) => {
+  let previous = JSON.stringify(params[key]);
+  return () => {
+    const current = JSON.stringify(params[key]);
+    if (current === previous) return;
+    setParams(params, method);
+    previous = current;
+  };
+};
+
+/**
+ * Sets the query string params to the current reactive params
+ */
+const setParams = (params: Record<string, unknown>, method: UpdateMethod) => {
+  history[method](intoState(params), '', `?${toQueryString(params)}`);
+};
+
+enum UpdateMethod {
+  replace = 'replaceState',
+  push = 'pushState',
+}
+
 if (import.meta.vitest) {
-  describe('QueryInterceptor', () => {
-    const Alpine = {
-      raw<T>(val: T): T {
-        return val;
-      },
-    };
+  describe('QueryInterceptor', async () => {
+    const Alpine = await import('alpinejs').then((m) => m.default);
     afterEach(() => {
       vi.restoreAllMocks();
     });
     it('defines value on the data', () => {
-      const paramObject = {};
+      const paramObject = Alpine.reactive({});
       const data = { foo: 'bar' };
       new QueryInterceptor('hello', Alpine, paramObject).initialize(
         data,
@@ -186,7 +198,7 @@ if (import.meta.vitest) {
       expect(data).toEqual({ foo: 'hello' });
     });
     it('stores value in the params', () => {
-      const paramObject = {};
+      const paramObject = Alpine.reactive({});
       const interceptor = new QueryInterceptor('hello', Alpine, paramObject);
       const data = { foo: 'bar' };
       interceptor.initialize(data, 'foo');
@@ -211,9 +223,9 @@ if (import.meta.vitest) {
       ).toBe('hello');
       expect(data).toEqual({ foo: 'hello' });
     });
-    it('updates history state', () => {
-      vi.spyOn(history, 'replaceState');
-      const paramObject = {};
+    it('updates history state', async () => {
+      vi.spyOn(history, UpdateMethod.replace);
+      const paramObject = Alpine.reactive({});
       const data = { foo: 'bar' };
       new QueryInterceptor('hello', Alpine, paramObject).initialize(
         data,
@@ -221,6 +233,7 @@ if (import.meta.vitest) {
       );
       expect(data).toEqual({ foo: 'hello' });
       data.foo = 'world';
+      await Alpine.nextTick();
       expect(paramObject).toEqual({ foo: 'world' });
       expect(data).toEqual({ foo: 'world' });
       expect(history.replaceState).toHaveBeenCalledWith(
@@ -229,6 +242,7 @@ if (import.meta.vitest) {
         '?foo=world',
       );
       data.foo = 'fizzbuzz';
+      await Alpine.nextTick();
       expect(paramObject).toEqual({ foo: 'fizzbuzz' });
       expect(data).toEqual({ foo: 'fizzbuzz' });
       expect(history.replaceState).toHaveBeenCalledWith(
@@ -237,15 +251,16 @@ if (import.meta.vitest) {
         '?foo=fizzbuzz',
       );
     });
-    it('can alias the key', () => {
-      vi.spyOn(history, 'replaceState');
-      const paramObject = {};
+    it('can alias the key', async () => {
+      vi.spyOn(history, UpdateMethod.replace);
+      const paramObject = Alpine.reactive({});
       const data = { foo: 'bar' };
       new QueryInterceptor('hello', Alpine, paramObject)
         .as('bar')
         .initialize(data, 'foo');
       expect(data).toEqual({ foo: 'hello' });
       data.foo = 'world';
+      await Alpine.nextTick();
       expect(paramObject).toEqual({ bar: 'world' });
       expect(data).toEqual({ foo: 'world' });
       expect(history.replaceState).toHaveBeenCalledWith(
@@ -263,30 +278,33 @@ if (import.meta.vitest) {
       expect(data).toEqual({ count: 1 });
       expect(paramObject).toEqual({ count: 1 });
     });
-    it('does not display inital value', () => {
-      vi.spyOn(history, 'replaceState');
-      const paramObject = {};
+    it('does not display inital value', async () => {
+      vi.spyOn(history, UpdateMethod.replace);
+      const paramObject = Alpine.reactive({});
       const data = { foo: 'bar' };
       new QueryInterceptor(data.foo, Alpine, paramObject).initialize(
         data,
         'foo',
       );
       data.foo = 'hello';
+      await Alpine.nextTick();
       expect(data).toEqual({ foo: 'hello' });
       expect(paramObject).toEqual({ foo: 'hello' });
       data.foo = 'bar';
+      await Alpine.nextTick();
       expect(data).toEqual({ foo: 'bar' });
       expect(paramObject).toEqual({});
       expect(history.replaceState).toHaveBeenCalledWith({ query: {} }, '', '?');
     });
-    it('can always show the initial value', () => {
-      vi.spyOn(history, 'replaceState');
-      const paramObject = {};
+    it('can always show the initial value', async () => {
+      vi.spyOn(history, UpdateMethod.replace);
+      const paramObject = Alpine.reactive({});
       const data = { foo: 'bar' };
       new QueryInterceptor(data.foo, Alpine, paramObject)
         .alwaysShow()
         .initialize(data, 'foo');
       data.foo = 'hello';
+      await Alpine.nextTick();
       expect(data).toEqual({ foo: 'hello' });
       expect(paramObject).toEqual({ foo: 'hello' });
       expect(history.replaceState).toHaveBeenCalledWith(
@@ -295,6 +313,7 @@ if (import.meta.vitest) {
         '?foo=hello',
       );
       data.foo = 'bar';
+      await Alpine.nextTick();
       expect(data).toEqual({ foo: 'bar' });
       expect(paramObject).toEqual({ foo: 'bar' });
       expect(history.replaceState).toHaveBeenCalledWith(
@@ -303,15 +322,16 @@ if (import.meta.vitest) {
         '?foo=bar',
       );
     });
-    it('can use pushState', () => {
-      vi.spyOn(history, 'replaceState');
-      vi.spyOn(history, 'pushState');
-      const paramObject = {};
+    it('can use pushState', async () => {
+      vi.spyOn(history, UpdateMethod.replace);
+      vi.spyOn(history, UpdateMethod.push);
+      const paramObject = Alpine.reactive({});
       const data = { foo: 'bar' };
       new QueryInterceptor(data.foo, Alpine, paramObject)
         .usePush()
         .initialize(data, 'foo');
       data.foo = 'hello';
+      await Alpine.nextTick();
       expect(data).toEqual({ foo: 'hello' });
       expect(paramObject).toEqual({ foo: 'hello' });
       expect(history.pushState).toHaveBeenCalledWith(

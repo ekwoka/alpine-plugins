@@ -9,14 +9,17 @@
       import query from '../src/index.ts';
       Alpine.plugin(query);
       Alpine.data('test', () => ({
-        count: Alpine.query(0).into(Number),
-        date: Alpine.query(new Date().toString()).as('now').alwaysShow(),
+        foo: Alpine.query({
+          fizz: 'buzz',
+          bar: [{ first: 'second', count: 0 }],
+        }).alwaysShow(),
       }));
       Alpine.start();
+      window.Alpine = Alpine;
     </script>
   </head>
-  <body x-data="test" @click="count--">
-    <div x-text="count"></div>
-    <div x-text="date"></div>
+  <body x-data="test" @click="foo.bar[0].count++">
+    <div x-text="foo.bar[0].count"></div>
+    <div x-text="JSON.stringify(foo)"></div>
   </body>
 </html>
