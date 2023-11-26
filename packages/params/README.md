@@ -183,36 +183,6 @@ This plugin does not do anything to manage params not associated with an `$query
 
 This does not directly expose anything for triggering events or handlers on query string changes. As the query interceptors are reactive, you can hook directly into the ones you care about and use Alpine Effects to trigger events or other behaviors.
 
-## Use outside of Alpine
-
-This Alpine plugin can actually be used outside of Alpine, though it's obviously not ideal for many reason. It's a bit of a hack, but it works!
-
-```ts
-import { QueryInterceptor } from '@ekwoka/alpine-history';
-
-const params: Record<string, unknown> = {}; // internal object structure to store the params
-
-const myData = {
-  search: '',
-};
-
-new QueryInterceptor(
-  '',
-  {
-    raw: <T>(v: T): T => {
-      v;
-    },
-  },
-  params,
-)
-  .as('q')
-  .initialize(myData, 'search');
-```
-
-Not example pretty, but it works!
-
-This can allow you to use other reactive objects, like Solid Stores. But mostly, this is a hack, but fun!
-
 ## Author
 
 👤 **Eric Kwoka**
