@@ -1,7 +1,7 @@
 {
   "name": "@ekwoka/alpine-history",
   "version": "0.0.3",
-  "description": "A simple Alpine Directive for use with Cloudinary Fetch API for handling Responsive Images",
+  "description": "Sync Component an Store values to the URL Search Params!!!",
   "author": {
     "name": "Eric Kwoka",
     "email": "eric@thekwoka.net",
@@ -9,11 +9,7 @@
   },
   "license": "MIT",
   "keywords": [
-    "AlpineJS",
-    "RIAS",
-    "respimg",
-    "cloudinary",
-    "shopify"
+    "AlpineJS"
   ],
   "type": "module",
   "files": [
@@ -51,5 +47,5 @@
     "type": "git",
     "url": "https://github.com/ekwoka/alpine-plugins"
   },
-  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/xrias/README.md"
+  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/params/README.md"
 }
