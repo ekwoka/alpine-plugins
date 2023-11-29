@@ -128,7 +128,6 @@ export const query: PluginCallback = (Alpine) => {
   });
 
   onURLChange((url) => {
-    console.log('url changed', url.search);
     const query = fromQueryString(url.search);
     updateParams(query);
   });
@@ -176,7 +175,6 @@ const paramEffect = (
   return () => {
     const current = JSON.stringify(params[key]);
     if (current === previous) return;
-    console.log('param changed', current);
     untrack(() => setParams(params, method));
     previous = current;
   };
@@ -306,7 +304,7 @@ if (import.meta.vitest) {
       await Alpine.nextTick();
       expect(data).toEqual({ foo: 'bar' });
       expect(paramObject).toEqual({});
-      expect(history.replaceState).toHaveBeenCalledWith({ query: {} }, '', '?');
+      expect(history.replaceState).toHaveBeenCalledWith({ query: {} }, '', '/');
     });
     it('can always show the initial value', async () => {
       vi.spyOn(history, UpdateMethod.replace);
