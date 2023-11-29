@@ -173,6 +173,27 @@ If you have nested primitives like booleans and numbers, you can use `.into` to 
 
 You may choose to use separate `$query` interceptors to make this simpler.
 
+## `observeHistory`
+
+You might want to use `$query` and have other tools that make changes to the query. By default, when `$query` intercepted values change, it is unaware of any other changes made to the `URL` and those change may be removed.
+
+To handle this, you can import `observeHistory` and call it (with a `History` object, or it will default to `globalThis.history`), and the `pushState` and `replaceState` methods will be wrapped to update the reactive params when they are called.
+
+```js
+import Alpine from 'alpinets/src';
+import { query, observeHistory } from '../src/index.ts';
+Alpine.plugin(query);
+Alpine.data('test', () => ({
+  count: Alpine.query(0).into(Number),
+}));
+observeHistory();
+Alpine.start();
+
+history.pushState({}, '', '?count=123');
+```
+
+This is not needed to handle `popState` events which are already handled by the plugin.
+
 ## Reactivity
 
 All normal reactive behaviors apply to the `$query` interceptor. You can hook up effects to them, and just have a grand old time.

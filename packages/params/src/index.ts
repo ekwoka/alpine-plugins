@@ -6,6 +6,7 @@ import {
   deleteDotNotatedValueFromData,
   insertDotNotatedValueIntoData,
 } from './pathresolve';
+import { UpdateMethod, onURLChange, untrack } from './history';
 
 type InnerType<T, S> = T extends PrimitivesToStrings<T>
   ? T
@@ -115,11 +116,21 @@ export const query: PluginCallback = (Alpine) => {
     fromQueryString(location.search),
   );
 
+  const updateParams = (obj: Record<string, unknown>) => {
+    Object.assign(reactiveParams, obj);
+    for (const key in Alpine.raw(reactiveParams))
+      if (!(key in obj)) delete reactiveParams[key];
+  };
+
   window.addEventListener('popstate', (event) => {
     if (!event.state?.query) return;
-    if (event.state.query) Object.assign(reactiveParams, event.state.query);
-    for (const key in Alpine.raw(reactiveParams))
-      if (!(key in event.state.query)) delete reactiveParams[key];
+    updateParams(event.state.query);
+  });
+
+  onURLChange((url) => {
+    console.log('url changed', url.search);
+    const query = fromQueryString(url.search);
+    updateParams(query);
   });
 
   const bindQuery = <T>(initial: T) =>
@@ -165,7 +176,8 @@ const paramEffect = (
   return () => {
     const current = JSON.stringify(params[key]);
     if (current === previous) return;
-    setParams(params, method);
+    console.log('param changed', current);
+    untrack(() => setParams(params, method));
     previous = current;
   };
 };
@@ -174,13 +186,13 @@ const paramEffect = (
  * Sets the query string params to the current reactive params
  */
 const setParams = (params: Record<string, unknown>, method: UpdateMethod) => {
-  history[method](intoState(params), '', `?${toQueryString(params)}`);
+  const queryString = toQueryString(params);
+  history[method](
+    intoState(params),
+    '',
+    queryString ? `?${queryString}` : location.pathname,
+  );
 };
-
-enum UpdateMethod {
-  replace = 'replaceState',
-  push = 'pushState',
-}
 
 if (import.meta.vitest) {
   describe('QueryInterceptor', async () => {
@@ -353,3 +365,5 @@ type PrimitivesToStrings<T> = T extends string | number | boolean | null
       [K in keyof T]: PrimitivesToStrings<T[K]>;
     }
   : T;
+
+export { observeHistory } from './history';

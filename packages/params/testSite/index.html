@@ -6,20 +6,17 @@
     <title>X RIAS TEST SITE</title>
     <script type="module" lang="ts">
       import Alpine from 'alpinets/src';
-      import query from '../src/index.ts';
+      import { query, observeHistory } from '../src/index.ts';
       Alpine.plugin(query);
       Alpine.data('test', () => ({
-        foo: Alpine.query({
-          fizz: 'buzz',
-          bar: [{ first: 'second', count: 0 }],
-        }).alwaysShow(),
+        count: Alpine.query(0).into(Number),
       }));
+      observeHistory();
       Alpine.start();
       window.Alpine = Alpine;
     </script>
   </head>
-  <body x-data="test" @click="foo.bar[0].count++">
-    <div x-text="foo.bar[0].count"></div>
-    <div x-text="JSON.stringify(foo)"></div>
+  <body x-data="test" @click="count--">
+    <div x-text="count"></div>
   </body>
 </html>
