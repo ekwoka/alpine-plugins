@@ -6,17 +6,17 @@
     <title>X RIAS TEST SITE</title>
     <script type="module" lang="ts">
       import Alpine from 'alpinets/src';
-      import query from '../src/index.ts';
+      import { query, observeHistory } from '../src/index.ts';
       Alpine.plugin(query);
       Alpine.data('test', () => ({
         count: Alpine.query(0).into(Number),
-        date: Alpine.query(new Date().toString()).as('now').alwaysShow(),
       }));
+      observeHistory();
       Alpine.start();
+      window.Alpine = Alpine;
     </script>
   </head>
   <body x-data="test" @click="count--">
     <div x-text="count"></div>
-    <div x-text="date"></div>
   </body>
 </html>

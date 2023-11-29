@@ -173,6 +173,27 @@ If you have nested primitives like booleans and numbers, you can use `.into` to 
 
 You may choose to use separate `$query` interceptors to make this simpler.
 
+## `observeHistory`
+
+You might want to use `$query` and have other tools that make changes to the query. By default, when `$query` intercepted values change, it is unaware of any other changes made to the `URL` and those change may be removed.
+
+To handle this, you can import `observeHistory` and call it (with a `History` object, or it will default to `globalThis.history`), and the `pushState` and `replaceState` methods will be wrapped to update the reactive params when they are called.
+
+```js
+import Alpine from 'alpinets/src';
+import { query, observeHistory } from '../src/index.ts';
+Alpine.plugin(query);
+Alpine.data('test', () => ({
+  count: Alpine.query(0).into(Number),
+}));
+observeHistory();
+Alpine.start();
+
+history.pushState({}, '', '?count=123');
+```
+
+This is not needed to handle `popState` events which are already handled by the plugin.
+
 ## Reactivity
 
 All normal reactive behaviors apply to the `$query` interceptor. You can hook up effects to them, and just have a grand old time.
@@ -182,36 +203,6 @@ All normal reactive behaviors apply to the `$query` interceptor. You can hook up
 This plugin does not do anything to manage params not associated with an `$query` interceptor. This means that if you have a query string like `?search=hello&sort=asc` and you only have a `$query` interceptor for `search`, the `sort` param will be perpetuated during query string updates.
 
 This does not directly expose anything for triggering events or handlers on query string changes. As the query interceptors are reactive, you can hook directly into the ones you care about and use Alpine Effects to trigger events or other behaviors.
-
-## Use outside of Alpine
-
-This Alpine plugin can actually be used outside of Alpine, though it's obviously not ideal for many reason. It's a bit of a hack, but it works!
-
-```ts
-import { QueryInterceptor } from '@ekwoka/alpine-history';
-
-const params: Record<string, unknown> = {}; // internal object structure to store the params
-
-const myData = {
-  search: '',
-};
-
-new QueryInterceptor(
-  '',
-  {
-    raw: <T>(v: T): T => {
-      v;
-    },
-  },
-  params,
-)
-  .as('q')
-  .initialize(myData, 'search');
-```
-
-Not example pretty, but it works!
-
-This can allow you to use other reactive objects, like Solid Stores. But mostly, this is a hack, but fun!
 
 ## Author
 
