@@ -1,18 +1,22 @@
 import type { PluginCallback, InterceptorObject, Alpine } from 'alpinejs';
-import { fromQueryString, toQueryString } from './querystring';
+import { fromQueryString, toQueryString } from './querystring.js';
 import {
   retrieveDotNotatedValueFromData,
   objectAtPath,
   deleteDotNotatedValueFromData,
   insertDotNotatedValueIntoData,
-} from './pathresolve';
-import { UpdateMethod, onURLChange, untrack } from './history';
+} from './pathresolve.js';
+import { UpdateMethod, onURLChange, untrack } from './history.js';
+import { Encoding, PrimitivesToStrings } from './encoding.js';
+export { base64, base64URL } from './encoding.js';
+export type { Encoding, PrimitivesToStrings } from './encoding.js';
 
-type InnerType<T, S> = T extends PrimitivesToStrings<T>
-  ? T
-  : S extends Transformer<T>
-  ? T
-  : T | PrimitivesToStrings<T>;
+type _InnerType<T, S> =
+  T extends PrimitivesToStrings<T>
+    ? T
+    : S extends Transformer<T>
+      ? T
+      : T | PrimitivesToStrings<T>;
 
 /**
  * This is the InterceptorObject that is returned from the `query` function.
@@ -20,21 +24,22 @@ type InnerType<T, S> = T extends PrimitivesToStrings<T>
  * This hooks up setter/getter methods to to replace the object itself
  * and sync the query string params
  */
-class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
-  implements InterceptorObject<InnerType<T, S>>
-{
+class QueryInterceptor<T> implements InterceptorObject<T> {
   _x_interceptor = true as const;
   private alias: string | undefined = undefined;
-  private transformer?: S;
+  private encoder: Encoding<T> = {
+    to: (v) => v as PrimitivesToStrings<T>,
+    from: (v) => v as T,
+  };
   private method: UpdateMethod = UpdateMethod.replace;
   private show: boolean = false;
-  public initialValue: InnerType<T, S>;
+  public initialValue: T;
   constructor(
     initialValue: T,
     private Alpine: Pick<Alpine, 'effect'>,
     private reactiveParams: Record<string, unknown>,
   ) {
-    this.initialValue = initialValue as InnerType<T, S>;
+    this.initialValue = initialValue;
   }
   /**
    * Self Initializing interceptor called by Alpine during component initialization
@@ -42,7 +47,7 @@ class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
    * @param {string} path dot notated path from the data root to the interceptor
    * @returns {T} The value of the interceptor after initialization
    */
-  initialize(data: Record<string, unknown>, path: string): InnerType<T, S> {
+  initialize(data: Record<string, unknown>, path: string): T {
     const {
       alias = path,
       Alpine,
@@ -50,10 +55,13 @@ class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
       method,
       reactiveParams,
       show,
-      transformer,
+      encoder,
     } = this;
-    const initial = (retrieveDotNotatedValueFromData(alias, reactiveParams) ??
-      initialValue) as InnerType<T, S>;
+    const existing = retrieveDotNotatedValueFromData(
+      alias,
+      reactiveParams,
+    ) as PrimitivesToStrings<T> | null;
+    const initial = existing ? encoder.from(existing) : initialValue;
 
     const keys = path.split('.');
     const final = keys.pop()!;
@@ -63,11 +71,18 @@ class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
       set: (value: T) => {
         !show && value === initialValue
           ? deleteDotNotatedValueFromData(alias, reactiveParams)
-          : insertDotNotatedValueIntoData(alias, value, reactiveParams);
+          : insertDotNotatedValueIntoData(
+              alias,
+              encoder.to(value),
+              reactiveParams,
+            );
       },
       get: () => {
-        const value = (retrieveDotNotatedValueFromData(alias, reactiveParams) ??
-          initialValue) as T;
+        const existing = retrieveDotNotatedValueFromData(
+          alias,
+          reactiveParams,
+        ) as PrimitivesToStrings<T> | null;
+        const value = existing ? encoder.from(existing) : initialValue;
         return value;
       },
       enumerable: true,
@@ -75,7 +90,7 @@ class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
 
     Alpine.effect(paramEffect(alias, reactiveParams, method));
 
-    return (transformer?.(initial) ?? initial) as InnerType<T, S>;
+    return initial;
   }
   /**
    * Changes the keyname for using in the query string
@@ -90,10 +105,9 @@ class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
    * Transforms the value of the query param before it is set on the data
    * @param {function} fn Transformer function
    */
-  into(fn: Transformer<T>): QueryInterceptor<T, Transformer<T>> {
-    const self = this as QueryInterceptor<T, Transformer<T>>;
-    self.transformer = fn;
-    return self;
+  into(fn: Transformer<T>): QueryInterceptor<T> {
+    this.encoder.from = fn;
+    return this;
   }
   /**
    * Always show the initial value in the query string
@@ -107,6 +121,14 @@ class QueryInterceptor<T, S extends Transformer<T> | undefined = undefined>
    */
   usePush() {
     this.method = UpdateMethod.push;
+    return this;
+  }
+  /**
+   * Registers encoding and decoding functions to transform the value
+   * before it is set on the query string
+   */
+  encoding(encoder: Encoding<T>): QueryInterceptor<T> {
+    this.encoder = encoder;
     return this;
   }
 }
@@ -195,6 +217,7 @@ const setParams = (params: Record<string, unknown>, method: UpdateMethod) => {
 if (import.meta.vitest) {
   describe('QueryInterceptor', async () => {
     const Alpine = await import('alpinejs').then((m) => m.default);
+    const { base64URL } = await import('./encoding');
     afterEach(() => {
       vi.restoreAllMocks();
     });
@@ -351,17 +374,24 @@ if (import.meta.vitest) {
       );
       expect(history.replaceState).not.toHaveBeenCalled();
     });
+    it('can have a defined encoding', async () => {
+      vi.spyOn(history, UpdateMethod.replace);
+      const paramObject = Alpine.reactive({});
+      const data = { foo: '' };
+      new QueryInterceptor(data.foo, Alpine, paramObject)
+        .encoding(base64URL)
+        .initialize(data, 'foo');
+      data.foo = '<<???>>';
+      await Alpine.nextTick();
+      expect(data).toEqual({ foo: '<<???>>' });
+      expect(paramObject).toEqual({ foo: 'PDw_Pz8-Pg' });
+      expect(history.replaceState).toHaveBeenCalledWith(
+        { query: { foo: 'PDw_Pz8-Pg' } },
+        '',
+        '?foo=PDw_Pz8-Pg',
+      );
+    });
   });
 }
-
-type PrimitivesToStrings<T> = T extends string | number | boolean | null
-  ? `${T}`
-  : T extends Array<infer U>
-  ? Array<PrimitivesToStrings<U>>
-  : T extends object
-  ? {
-      [K in keyof T]: PrimitivesToStrings<T[K]>;
-    }
-  : T;
 
 export { observeHistory } from './history';

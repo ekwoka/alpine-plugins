@@ -122,12 +122,12 @@ type Transformer<T> = (val: T | PrimitivesToStrings<T>) => T;
 type PrimitivesToStrings<T> = T extends string | number | boolean | null
   ? `${T}`
   : T extends Array<infer U>
-  ? Array<PrimitivesToStrings<U>>
-  : T extends object
-  ? {
-      [K in keyof T]: PrimitivesToStrings<T[K]>;
-    }
-  : T;
+    ? Array<PrimitivesToStrings<U>>
+    : T extends object
+      ? {
+          [K in keyof T]: PrimitivesToStrings<T[K]>;
+        }
+      : T;
 ```
 
 Note, the transformer will need to be able to handle being called with the type of the value or a simply parsed structure that equates to all primitives being strings. This is because the transformer will be called with the value when initializing, which can be the provided value, or the one determined from the query string.
