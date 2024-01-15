@@ -31,7 +31,6 @@ export default defineConfig({
     reporters: ['dot'],
     environment: 'happy-dom',
     deps: {},
-    useAtomics: true,
     passWithNoTests: true,
   },
 });
