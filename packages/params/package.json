@@ -1,6 +1,6 @@
 {
   "name": "@ekwoka/alpine-history",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Sync Component an Store values to the URL Search Params!!!",
   "author": {
     "name": "Eric Kwoka",
