@@ -95,7 +95,7 @@ importers:
         specifier: 3.x
         version: 3.13.3
 
-  packages/x-scope:
+  packages/scope:
     dependencies:
       alpinejs:
         specifier: 3.x
