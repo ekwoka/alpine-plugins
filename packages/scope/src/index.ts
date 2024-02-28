@@ -1,8 +1,14 @@
 import type { Alpine } from 'alpinejs';
 import type { Assertion } from 'vitest';
 
+export const $scope = Symbol('$scope');
+
+/**
+ * Alpine Scope Plugin registers `$scope` magic property and `x-scope` directive.
+ * Allows reaching into specific parent component contexts to access their data.
+ * @param Alpine {Alpine}
+ */
 export const Scope = (Alpine: Alpine) => {
-  const $scope = Symbol('$scope');
   type Scopable = { [$scope]?: Map<string, HTMLElement> };
   Alpine.directive('scope', (el, { expression }) => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -35,6 +41,9 @@ export default Scope;
 declare module 'alpinejs' {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   export interface Magics<T> {
+    /**
+     * A `Proxy` of the parent component scopes
+     */
     $scope: Record<string, unknown>;
   }
 }

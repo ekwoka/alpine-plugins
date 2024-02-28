@@ -11,12 +11,12 @@
   },
   "scope": {
     "minified": {
-      "pretty": "373 B",
-      "raw": 373
+      "pretty": "381 B",
+      "raw": 381
     },
     "brotli": {
-      "pretty": "236 B",
-      "raw": 236
+      "pretty": "240 B",
+      "raw": 240
     }
   },
   "xajax": {

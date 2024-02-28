@@ -1,5 +1,5 @@
 {
-  "name": "@ekwoka/xscope",
+  "name": "@ekwoka/alpine-scope",
   "version": "0.0.1",
   "description": "Access component scopes by name",
   "author": {

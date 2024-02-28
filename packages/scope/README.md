@@ -1,25 +1,25 @@
-# Alpine History: Param Persistance for AlpineJS
+# Alpine Scope: Scoped Context Naming for AlpineJS
 
-[<img src="https://img.shields.io/npm/v/@ekwoka/alpine-history?label=%20&style=for-the-badge&logo=pnpm&logoColor=white">](https://www.npmjs.com/package/@ekwoka/alpine-history)
-<img src="https://img.shields.io/npm/types/@ekwoka/alpine-history?label=%20&amp;logo=typescript&amp;logoColor=white&amp;style=for-the-badge">
-<img src="https://img.shields.io/npm/dt/@ekwoka/alpine-history?style=for-the-badge&logo=npm&logoColor=white" >
-[<img src="https://img.shields.io/bundlephobia/minzip/@ekwoka/alpine-history?style=for-the-badge&logo=esbuild&logoColor=white">](https://bundlephobia.com/package/@ekwoka/alpine-history)
+[<img src="https://img.shields.io/npm/v/@ekwoka/alpine-scope?label=%20&style=for-the-badge&logo=pnpm&logoColor=white">](https://www.npmjs.com/package/@ekwoka/alpine-scope)
+<img src="https://img.shields.io/npm/types/@ekwoka/alpine-scope?label=%20&amp;logo=typescript&amp;logoColor=white&amp;style=for-the-badge">
+<img src="https://img.shields.io/npm/dt/@ekwoka/alpine-scope?style=for-the-badge&logo=npm&logoColor=white" >
+[<img src="https://img.shields.io/bundlephobia/minzip/@ekwoka/alpine-scope?style=for-the-badge&logo=esbuild&logoColor=white">](https://bundlephobia.com/package/@ekwoka/alpine-scope)
 
-> This exposes a simple magic `$query` to allow syncing and persisting values in an Alpine Component to the URL query string. This is useful for things like search forms, where you want to be able to share a link to the search results.
+> This exposes a simple magic `$scope` to allow accessing specific component scopes in the tree by name.
 
 ## Install
 
 ```sh
-npm i @ekwoka/alpine-history
+npm i @ekwoka/alpine-scope
 ```
 
 Import to Build (Simple Version):
 
 ```js
 import Alpine from 'alpinejs';
-import Params from '@ekwoka/alpine-history';
+import Scope from '@ekwoka/alpine-scope';
 
-Alpine.plugin(Params); // key used for your Cloudinary with Fetch API
+Alpine.plugin(Scope);
 
 window.Alpine = Alpine;
 Alpine.start();
@@ -27,182 +27,64 @@ Alpine.start();
 
 ## Usage:
 
-When you want to sync a value to the URL query string, simply use the `$query` magic property when defining your Alpine component:
+When using Alpine, it can sometimes be difficult to access the values you want in some component trees. While often this is a case of poor design, sometimes the best design can still run into some conflicts that require awkward workarounds.
+
+With this plugin, you can use the magic `$scope` to directly access the data context of a specific component in the tree.
+
+### Implicit Naming
 
 ```html
-<div
-  x-data="{
-  search: $query(''),
-}">
-  <span x-text="search"></span>
-  <input type="text" x-model="search" />
+<div x-data="foo">
+  // { value: 'hello' }
+  <div x-data="bar">
+    // { value: 'world' }
+    <span x-text="$scope.foo.value"></span> // 'hello'
+    <span x-text="value"></span> // 'world'
+  </div>
 </div>
 ```
 
-Now you will see as you type in the input, the URL will update to include the query string `?search=your+input+here`. Refresh the page and your value will be restored! It's so easy!
-
-You can even go back and forward in the navigation! It's like magic!
-
-> This adds `Alpine.query` to allow this to be used in contexts that don't have Magics available, like when using `Alpine.data`.
-
-## Options
-
-The Query Interceptor exposes a few handy helpers to customize the behavior. These are available as methods to call after defining your initial value.
-
-### `.as(name: string)`
-
-By default, the query key will be the path in your component from the root until where the query is used. `as` can be used to customize the name of the query key.
+The above is an example of implicitely scoped contexts. The expression passed to `x-data` is used as the key. This works great when the contexts are defined with `Alpine.data` and referenced by name. Obviously, this would become an issue if you your expression is like
 
 ```html
 <div
-  x-data="{
-  search: $query('').as('q'),
-}"></div>
+  x-data="{ foo: { bar: [1,2,3 ]}, doStuff() { console.log(this.foo.bar) } }"></div>
 ```
 
-This will now use `q` as the query key instead of `search`.
+### Explicit Naming
 
-When the `$query` is nested in an object or array, the key in the query param will be visible as `key[key][key]` in the query string. This can be customized by using `as` on the parent object or array. For example:
+Conveniently included is the `x-scope` directive, which allows you to explicitly name the scope. This is useful for cases where the expression may be unknown at the point of needing the scoping, and cases where the expression is unwieldly.
 
-```js
-{
-  search: {
-    query: $query('hello'),
-  },
-}
+```html
+<div x-data="{ value: 'hello' }" x-scope="foo">
+  <div x-data="{ value: 'world' }">
+    <span x-text="$scope.foo.value"></span> // 'hello'
+    <span x-text="value"></span> // 'world'
+  </div>
+</div>
 ```
 
-would be `?search[query]=hello` by default.
+Pretty nifty!!!
 
-### `.alwaysShow()`
+And don't worry, scopes won't leak into other trees. They are only accessible within the tree they are defined.
 
-By default, if the current value of the query is the same as the defined initial value, the query will not be shown in the URL. This can be overridden by calling `.alwaysShow()`.
+## How it works
 
-```js
-{
-  search: $query('hello').as('q').alwaysShow(), // ?q=hello
-}
-```
+### `x-scope="expression"`
 
-### `.usePush()`
+`x-scope` adds a `Map` of scopes to the current elements nearest component, that contains any scopes from the parent component and then the current component. These are placed in the context under a special `Symbol` so as not to conflict with your components directly.
 
-By default, the query will be updated using `history.replaceState` to avoid adding a new entry to the browser history. This can be overridden by calling `.usePush()`. This should be used when the query is used to handle major state changes for the user, but will likely be less useful for quickly updating minor steps.
+This adds the scope to the current context, not the specific elements subtree. This means that children of the `root` element can provide a name to the scope, and that all elements in the component will see the same list of scopes, even if they are not in the same subtree. This can be useful for some more dynamic use cases. The same component scope can be named multiple times from multiple `x-scope` directives in the component tree, and they will not remove the others.
 
-```js
-{
-  episodeId: $query('').as('eid').usePush();
-}
-```
+However, the scopes are isolated to the component and its decendents, and will not leak into the parent or other components.
 
-Whenever `episodeId` the URL will be updated with `?eid=123` and a new entry will be added to the browser history.
+### `$scope.name`
 
-This plugin also implements a `popstate` listener to note when the user navigates back or forward in the browser history. This will update the value of the query to match the URL. Two way binding!
+`$scope` is a magic property available in expressions and component methods that exposes a `Proxy` that allows access to the Parent components.
 
-### `.into(fn: Transformer<T>)`
+When a key is access, like `$scope.foo`, the `Proxy` first looks in the current contexts `Map` of scopes (from `x-scope`) for a context. If no context is found, it will look up the tree for an element with a matching `x-data` expression to use its context.
 
-Naturally, query params are always strings. If you want to handle numbers or booleans, or other types, you can use the `.into` method to transform the value before it is used in your component.
-
-```js
-{
-  episodeId: $query('').as('eid').into(Number);
-}
-```
-
-Now, `episodeId` will be a number instead of a string when loaded from the query string.
-
-This only handles how the value is converted from the query string. It will not affect how the value is converted to a string when updating the query string. Due to this, object types that aren't simple objects or arrays will not work as expected. Speaking of...
-
-#### `Transformer<T>`
-
-For TypeScript people, here's the type signature for the transformer:
-
-```ts
-type Transformer<T> = (val: T | PrimitivesToStrings<T>) => T;
-
-type PrimitivesToStrings<T> = T extends string | number | boolean | null
-  ? `${T}`
-  : T extends Array<infer U>
-    ? Array<PrimitivesToStrings<U>>
-    : T extends object
-      ? {
-          [K in keyof T]: PrimitivesToStrings<T[K]>;
-        }
-      : T;
-```
-
-Note, the transformer will need to be able to handle being called with the type of the value or a simply parsed structure that equates to all primitives being strings. This is because the transformer will be called with the value when initializing, which can be the provided value, or the one determined from the query string.
-
-When writing your transformer as a literal or typed function, TypeScript should help guide you to a properly formatted transformer.
-
-Additionally, if you have an initial value that contains non-string primitives, the value of the key on the data context will resolve to `never` which should indicate, if you attempt to use it, that you need to add a transformer.
-
-```ts
-{
-  episodeId: $query(123), // never
-  seasonNumber: $query(1).into(Number), // number
-}
-```
-
-## Arrays and Objects
-
-This plugin supports arrays and objects as well! It will automatically treat objects and arrays as if they are made up of `$query` interceptors. For example:
-
-```js
-{
-  search: $query({
-    query: 'hello',
-    results: ['1', '2', '3'],
-  }),
-}
-```
-
-will be `?search[query]=hello&search[results][0]=1&search[results][1]=2&search[results][2]=3` by default.
-
-If you have nested primitives like booleans and numbers, you can use `.into` to transform them, but your transformer will need to handle the nested values.
-
-```js
-{
-  search: $query({
-    query: 'hello',
-    results: [1, 2, 3],
-  }).into((obj) => {
-    obj.results = obj.results.map(Number);
-  }),
-}
-```
-
-You may choose to use separate `$query` interceptors to make this simpler.
-
-## `observeHistory`
-
-You might want to use `$query` and have other tools that make changes to the query. By default, when `$query` intercepted values change, it is unaware of any other changes made to the `URL` and those change may be removed.
-
-To handle this, you can import `observeHistory` and call it (with a `History` object, or it will default to `globalThis.history`), and the `pushState` and `replaceState` methods will be wrapped to update the reactive params when they are called.
-
-```js
-import Alpine from 'alpinets/src';
-import { query, observeHistory } from '../src/index.ts';
-Alpine.plugin(query);
-Alpine.data('test', () => ({
-  count: Alpine.query(0).into(Number),
-}));
-observeHistory();
-Alpine.start();
-
-history.pushState({}, '', '?count=123');
-```
-
-This is not needed to handle `popState` events which are already handled by the plugin.
-
-## Reactivity
-
-All normal reactive behaviors apply to the `$query` interceptor. You can hook up effects to them, and just have a grand old time.
-
-## What This Doesn't Do
-
-This plugin does not do anything to manage params not associated with an `$query` interceptor. This means that if you have a query string like `?search=hello&sort=asc` and you only have a `$query` interceptor for `search`, the `sort` param will be perpetuated during query string updates.
-
-This does not directly expose anything for triggering events or handlers on query string changes. As the query interceptors are reactive, you can hook directly into the ones you care about and use Alpine Effects to trigger events or other behaviors.
+This means that explicitely named scopes will always take precedence over implicitely named scopes, and that scopes will not leak to sibling or parent trees.
 
 ## Author
 
