@@ -47,5 +47,5 @@
     "type": "git",
     "url": "https://github.com/ekwoka/alpine-plugins"
   },
-  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/xscope/README.md"
+  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/scope/README.md"
 }

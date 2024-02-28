@@ -1,28 +1,27 @@
-import type { Alpine } from 'alpinets';
+import type { Alpine } from 'alpinejs';
+import type { Assertion } from 'vitest';
 
 export const Scope = (Alpine: Alpine) => {
   const $scope = Symbol('$scope');
+  type Scopable = { [$scope]?: Map<string, HTMLElement> };
   Alpine.directive('scope', (el, { expression }) => {
-    const context = Alpine.$data(el);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const context = Alpine.$data(el) as Scopable;
 
     const rootContext = Alpine.closestDataStack(el)[0];
     if (!rootContext) return;
-    rootContext[$scope] = new Map(
-      context[$scope] as Map<string, HTMLElement> | undefined,
-    ).set(expression, el);
+    rootContext[$scope] = new Map(context[$scope]).set(expression, el);
   });
   Alpine.magic('scope', (el) => {
     return new Proxy(
       {},
       {
         get(_, name: string) {
-          const scopes = Alpine.$data(el)[$scope] as
-            | Map<string, HTMLElement>
-            | undefined;
+          const scopes = (Alpine.$data(el) as Scopable)[$scope];
           if (scopes?.has(name)) return Alpine.$data(scopes.get(name)!);
           const root = Alpine.findClosest(el, (el) =>
             el.matches(`[x-data="${name}"]`),
-          );
+          ) as HTMLElement | undefined;
           if (root) return Alpine.$data(root);
           return undefined;
         },
@@ -46,13 +45,13 @@ if (import.meta.vitest) {
       const root = await render(
         `
         <div x-data="foo">
-          <div x-data="bar">
-            <span id="naked" x-text="value"></span>
-            <span id="foo" x-text="$scope.foo?.value"></span>
-            <span id="bar" x-text="$scope.bar?.value"></span>
-          </div>
+        <div x-data="bar">
+        <span id="naked" x-text="value"></span>
+        <span id="foo" x-text="$scope.foo?.value"></span>
+        <span id="bar" x-text="$scope.bar?.value"></span>
         </div>
-      `.trim(),
+        </div>
+        `.trim(),
       )
         .withComponent('foo', () => ({ value: 'foo' }))
         .withComponent('bar', () => ({ value: 'bar' }))
@@ -70,14 +69,14 @@ if (import.meta.vitest) {
     it('can access explicitely scoped context', async () => {
       const root = await render(
         `
-        <div x-data="{ value: 'foo' }" x-scope="foo">
-          <div x-data="{ value: 'bar' }" x-scope="bar">
-            <span id="naked" x-text="value"></span>
-            <span id="foo" x-text="$scope.foo?.value"></span>
-            <span id="bar" x-text="$scope.bar?.value"></span>
-          </div>
-        </div>
-      `.trim(),
+                <div x-data="{ value: 'foo' }" x-scope="foo">
+                <div x-data="{ value: 'bar' }" x-scope="bar">
+                <span id="naked" x-text="value"></span>
+                <span id="foo" x-text="$scope.foo?.value"></span>
+                <span id="bar" x-text="$scope.bar?.value"></span>
+                </div>
+                </div>
+                `.trim(),
       ).withPlugin(Scope);
       expect((root as HTMLElement).querySelector('#naked')).toHaveTextContent(
         'bar',
@@ -92,13 +91,13 @@ if (import.meta.vitest) {
     it('favors explicitely scoped contexts', async () => {
       const root = await render(
         `
-        <div x-data="foo" x-scope="bar">
-          <div x-data="bar">
-            <span id="naked" x-text="value"></span>
-            <span id="bar" x-text="$scope.bar?.value"></span>
-          </div>
-        </div>
-      `.trim(),
+                        <div x-data="foo" x-scope="bar">
+                        <div x-data="bar">
+                        <span id="naked" x-text="value"></span>
+                        <span id="bar" x-text="$scope.bar?.value"></span>
+                        </div>
+                        </div>
+                        `.trim(),
       )
         .withComponent('foo', () => ({ value: 'foo' }))
         .withComponent('bar', () => ({ value: 'bar' }))
@@ -113,15 +112,15 @@ if (import.meta.vitest) {
     it('does not leak', async () => {
       const root = await render(
         `
-        <div x-data="{ value: 'root' }">
-        <div x-data="foo" x-scope="foo"></div>
-        <div x-data="bar">
-        </div>
-        <span id="naked" x-text="value"></span>
-        <span id="foo" x-text="$scope.foo?.value ?? 'not found'"></span>
-        <span id="bar" x-text="$scope.bar?.value ?? 'not found'"></span>
-        </div>
-      `.trim(),
+                              <div x-data="{ value: 'root' }">
+                              <div x-data="foo" x-scope="foo"></div>
+                              <div x-data="bar">
+                              </div>
+                              <span id="naked" x-text="value"></span>
+                              <span id="foo" x-text="$scope.foo?.value ?? 'not found'"></span>
+                              <span id="bar" x-text="$scope.bar?.value ?? 'not found'"></span>
+                              </div>
+                              `.trim(),
       )
         .withComponent('foo', () => ({ value: 'foo' }))
         .withComponent('bar', () => ({ value: 'bar' }))
@@ -137,4 +136,11 @@ if (import.meta.vitest) {
       );
     });
   });
+}
+declare module 'vitest' {
+  interface Assertion<T> extends AlpineMatchers<T> {}
+}
+
+interface AlpineMatchers<T> {
+  toHaveTextContent: (expected: string) => Assertion<T>;
 }
