@@ -1,7 +1,7 @@
 /// <reference types="vitest" />
 import { resolve } from 'node:path';
+import { alpineTestingPlugin } from 'testing-library-alpine';
 import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 const accessOwnSources = () => {
   return {
@@ -17,19 +17,21 @@ const accessOwnSources = () => {
     },
   };
 };
-
+console.log('defining config');
 export default defineConfig({
   root: resolve(__dirname),
-  plugins: [tsconfigPaths(), accessOwnSources()],
+  plugins: [accessOwnSources(), alpineTestingPlugin()],
   build: {
     target: 'esnext',
+  },
+  resolve: {
+    mainFields: ['module', 'main'],
   },
   test: {
     globals: true,
     include: ['./**/*{.spec,.test}.{ts,tsx}'],
     includeSource: ['./**/*.{ts,tsx}'],
     reporters: ['dot'],
-    environment: 'happy-dom',
     deps: {},
     passWithNoTests: true,
   },

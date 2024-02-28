@@ -9,6 +9,16 @@
       "raw": 1163
     }
   },
+  "scope": {
+    "minified": {
+      "pretty": "373 B",
+      "raw": 373
+    },
+    "brotli": {
+      "pretty": "238 B",
+      "raw": 238
+    }
+  },
   "xajax": {
     "minified": {
       "pretty": "1.2 kB",
