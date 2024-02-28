@@ -19,7 +19,7 @@ Import to Build (Simple Version):
 import Alpine from 'alpinejs';
 import Params from '@ekwoka/alpine-history';
 
-Alpine.plugin(Params); // key used for your Cloudinary with Fetch API
+Alpine.plugin(Params);
 
 window.Alpine = Alpine;
 Alpine.start();

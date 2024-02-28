@@ -1,0 +1,51 @@
+{
+  "name": "@ekwoka/alpine-scope",
+  "version": "0.0.1",
+  "description": "Access component scopes by name",
+  "author": {
+    "name": "Eric Kwoka",
+    "email": "eric@thekwoka.net",
+    "url": "https://thekwoka.net/"
+  },
+  "license": "MIT",
+  "keywords": [
+    "AlpineJS"
+  ],
+  "type": "module",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "sideEffects": false,
+  "main": "dist/",
+  "types": "dist/",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js"
+    },
+    "./dist": "./dist/",
+    "./src": "./src/"
+  },
+  "scripts": {
+    "build": "vite build",
+    "coverage": "vitest run --coverage",
+    "lint": "eslint --fix ./src; prettier --write ./src --loglevel error",
+    "lint:check": "eslint --max-warnings 10 ./src && prettier --check ./src",
+    "lint:types": "tsc --noEmit",
+    "prebuild": "rm -rf dist",
+    "test": "vitest"
+  },
+  "peerDependencies": {
+    "alpinejs": "3.x"
+  },
+  "prettier": {
+    "singleQuote": true,
+    "bracketSameLine": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ekwoka/alpine-plugins"
+  },
+  "homepage": "https://github.com/ekwoka/alpine-plugins/blob/main/packages/scope/README.md"
+}

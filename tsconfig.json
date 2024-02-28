@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "paths": {
-      "@/timberts/*": ["./packages/timberts/src/*"]
-    },
-    "types": ["vitest/globals", "vitest/importMeta"],
+    "types": [
+      "vitest/globals",
+      "vitest/importMeta",
+      "testing-library-alpine/globals"
+    ],
     "allowJs": true,
     "declaration": true,
     "declarationMap": true,
