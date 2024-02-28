@@ -1,8 +1,8 @@
 /// <reference types="vitest" />
 import { resolve } from 'node:path';
+import { alpineTestingPlugin } from 'testing-library-alpine';
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
-import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
   root: resolve(__dirname),
@@ -11,7 +11,7 @@ export default defineConfig({
       entryRoot: resolve(__dirname, 'src'),
       tsconfigPath: resolve(__dirname, 'tsconfig.json'),
     }),
-    tsconfigPaths(),
+    alpineTestingPlugin(),
   ],
   define: {
     'import.meta.vitest': 'undefined',
@@ -41,9 +41,7 @@ export default defineConfig({
     include: ['./**/*{.spec,.test}.{ts,tsx}'],
     includeSource: ['./**/*.{ts,tsx}'],
     reporters: ['dot'],
-    environment: 'happy-dom',
     deps: {},
-    useAtomics: true,
     passWithNoTests: true,
   },
 });
