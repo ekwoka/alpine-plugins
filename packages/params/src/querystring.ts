@@ -82,28 +82,30 @@ if (import.meta.vitest) {
         expect(fromQueryString(str)).toEqual(obj);
       },
     );
-    it('doesnt parse __proto__', () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const thing: any = fromQueryString('hello=world&__proto__[fizz]=bar');
-      expect(thing).toEqual({ hello: 'world' });
-      expect(thing.__proto__?.fizz).toBeUndefined();
-      expect(fromQueryString('foo[__proto__]=bar&hello=world')).toEqual({
-        foo: {},
-        hello: 'world',
-      });
-      expect(
+    it.each(['__proto__', 'constructor', 'prototype'])(
+      'doesnt parse %s',
+      (key) => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (fromQueryString('foo[__proto__]=bar&hello=world') as any).foo
-          ?.__proto__,
-      ).not.toEqual('bar');
-      expect(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (fromQueryString('foo[0]=test&foo[__proto__]=bar&hello=world') as any)
-          .foo?.__proto__,
-      ).not.toEqual('bar');
-      expect(
-        fromQueryString('foo[0]=test&foo[__proto__]=bar&hello=world'),
-      ).toEqual({ foo: ['test'], hello: 'world' });
-    });
+        const thing: any = fromQueryString(`hello=world&${key}[fizz]=bar`);
+        expect(thing).toEqual({ hello: `world` });
+        expect(thing[key]?.fizz).toBeUndefined();
+        expect(fromQueryString(`foo[${key}]=bar&hello=world`)).toEqual({
+          foo: {},
+          hello: `world`,
+        });
+        expect(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (fromQueryString(`foo[${key}]=bar&hello=world`) as any).foo?.[key],
+        ).not.toEqual(`bar`);
+        expect(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (fromQueryString(`foo[0]=test&foo[${key}]=bar&hello=world`) as any)
+            .foo?.[key],
+        ).not.toEqual(`bar`);
+        expect(
+          fromQueryString(`foo[0]=test&foo[${key}]=bar&hello=world`),
+        ).toEqual({ foo: [`test`], hello: `world` });
+      },
+    );
   });
 }
