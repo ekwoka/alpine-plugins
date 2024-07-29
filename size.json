@@ -1,12 +1,12 @@
 {
   "params": {
     "minified": {
-      "pretty": "2.57 kB",
-      "raw": 2571
+      "pretty": "2.73 kB",
+      "raw": 2733
     },
     "brotli": {
-      "pretty": "1.16 kB",
-      "raw": 1163
+      "pretty": "1.23 kB",
+      "raw": 1231
     }
   },
   "scope": {
