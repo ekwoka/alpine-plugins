@@ -5,10 +5,11 @@ export const objectAtPath = (
 ) => {
   while (keys.length) {
     const key = keys.shift()!;
+    if (isForbidden(key)) return null;
 
     // This is where we fill in empty arrays/objects allong the way to the assigment...
     if (data[key] === undefined)
-      data[key] = isNaN(Number(keys[0] ?? final)) ? {} : [];
+      data[key] = isNaN(Number(keys[0] ?? final)) ? Object.create({}) : [];
     data = data[key] as Record<string, unknown>;
     // Keep deferring assignment until the full key is built up...
   }
@@ -22,8 +23,10 @@ export const insertDotNotatedValueIntoData = (
 ) => {
   const keys = path.split('.');
   const final = keys.pop()!;
-  data = objectAtPath(keys, data, final);
-  data[final] = value;
+  const interimdata = objectAtPath(keys, data, final);
+  return !interimdata || isForbidden(final)
+    ? undefined
+    : (interimdata[final] = value);
 };
 
 export const retrieveDotNotatedValueFromData = (
@@ -32,8 +35,8 @@ export const retrieveDotNotatedValueFromData = (
 ) => {
   const keys = path.split('.');
   const final = keys.pop()!;
-  data = objectAtPath(keys, data, final);
-  return data[final];
+  const interimdata = objectAtPath(keys, data, final);
+  return !interimdata || isForbidden(final) ? undefined : interimdata[final];
 };
 
 export const deleteDotNotatedValueFromData = (
@@ -42,8 +45,8 @@ export const deleteDotNotatedValueFromData = (
 ) => {
   const keys = path.split('.');
   const final = keys.pop()!;
-  data = objectAtPath(keys, data, final);
-  delete data[final];
+  const interimdata = objectAtPath(keys, data, final);
+  if (interimdata && !isForbidden(final)) delete data[final];
 };
 
 if (import.meta.vitest) {
@@ -74,3 +77,6 @@ if (import.meta.vitest) {
     });
   });
 }
+
+export const isForbidden = (key: string) => forbiddenKeys.includes(key);
+const forbiddenKeys = ['__proto__', 'constructor', 'prototype'];

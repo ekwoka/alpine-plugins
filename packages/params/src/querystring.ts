@@ -1,4 +1,4 @@
-import { insertDotNotatedValueIntoData } from './pathresolve';
+import { insertDotNotatedValueIntoData, isForbidden } from './pathresolve';
 
 /**
  * Converts Objects to bracketed query strings
@@ -36,12 +36,13 @@ export const buildQueryStringEntries = (
 };
 
 export const fromQueryString = (queryString: string) => {
-  const data: Record<string, unknown> = {};
+  const data: Record<string, unknown> = Object.create(null);
   if (queryString === '') return data;
 
   const entries = new URLSearchParams(queryString).entries();
 
   for (const [key, value] of entries) {
+    if (isForbidden(key)) continue;
     // Query string params don't always have values... (`?foo=`)
     if (!value) continue;
 
@@ -81,5 +82,28 @@ if (import.meta.vitest) {
         expect(fromQueryString(str)).toEqual(obj);
       },
     );
+    it('doesnt parse __proto__', () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const thing: any = fromQueryString('hello=world&__proto__[fizz]=bar');
+      expect(thing).toEqual({ hello: 'world' });
+      expect(thing.__proto__?.fizz).toBeUndefined();
+      expect(fromQueryString('foo[__proto__]=bar&hello=world')).toEqual({
+        foo: {},
+        hello: 'world',
+      });
+      expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (fromQueryString('foo[__proto__]=bar&hello=world') as any).foo
+          ?.__proto__,
+      ).not.toEqual('bar');
+      expect(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (fromQueryString('foo[0]=test&foo[__proto__]=bar&hello=world') as any)
+          .foo?.__proto__,
+      ).not.toEqual('bar');
+      expect(
+        fromQueryString('foo[0]=test&foo[__proto__]=bar&hello=world'),
+      ).toEqual({ foo: ['test'], hello: 'world' });
+    });
   });
 }
